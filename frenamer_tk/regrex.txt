@@ -1,0 +1,55 @@
+Regular Expressions make it easy to target patterns in a stream of text.
+
+s///	--> s/_what_your_looking_for_/_what_the_match_will_be_replaced_with_/_any_special_options_
+
+Changing the order in which things appear: 
+	transforming this "this example here" to "here this example"
+	s/(\w) (\w) (\w)/$3 $1 $2/
+
+Case translation:
+tr///	-->	tr/a-z/A-Z/		#convert lowercase text to uppercase
+		tr/A-Z/a-z/		#convert uppercase text to lowercase
+
+Regular Repression Cheatsheet
+ _______________________________________________________
+| .		| Any single character except a newline
+| \^		| The beginning of the line or string
+| \$		| The end of the line or string
+| \*		| Zero or_more of the last character
+| \+		| One or more of the last character 
+| \?		| Zero or one of the last character
+| {5,10}	| Five to ten times the previous character
+|		| for example: * equals {0,} ; + equals {1, }
+|		| ? equals {0,1}
+
+ _______________________________________________________
+| [qjk]		| Either q or j or k
+| [\^qjk]	| Neither q nor j nor k
+| [a-z]		| Anything from a to z inclusive
+| [\^a-z]		| No lower case letters
+| [a-zA-Z]		| Any letter
+| [a-z]+	|Any non-zero sequence of lower case letters
+| jelly|cream	| Either jelly or cream
+| (eg|le)gs	| Either eggs or legs
+| (da)+		| Either "da" or "dada" or "dadada" or ...
+| \n		| A newline
+| \t		| A tab
+| \w		| Any alphanumeric (word) character. The same as [a-zA-Z0-9_]
+| \W		| Any non-word character. The same as [^a-zA-Z0-9_]
+| \d		| Any digit. The same as [0-9]
+| \D		| Any non-digit. The same as [^0-9]
+| \s		| Any whitespace character: space, tab, newline, etc
+| \S		| Any non-whitespace character
+| \b		| A word boundary, outside [] only
+| \B		| No word boundary
+
+ _________________________
+| \|		| Vertical bar
+| \[		| An open square bracket
+| \)		| A closing parenthesis
+| \*		| An asterisk
+| \^		| A carat symbol
+| \/		| A slash
+| \\		| A backslash
+
+Skipped \r and \f from the list, r is another line feed, f is form feed
