@@ -46,7 +46,20 @@ Usage
     -help	    Usage options.
     -version    Version number.
     	
-Example I
+Example I.
+=====
+   Rename all jpg files to "Vacation 2013" with a sequential number prepended to each new filename.
+   		
+   		frenamer -rf="Vacation 2013" -sp -e=jpg
+   
+   What happens
+
+   		File: 2345234.jpg		Result: 01 Vacation 2013.jpg
+   		File: 2345235.jpg		Result: 02 Vacation 2013.jpg
+   		...
+   		File: 2345269.jpg		Result: 35 Vacation 2013.jpg
+	
+Example II.
 =====
    In the music folder and all its subfolders find the blank spaces after the track number 
    and replace  them with a dot. Target only ogg files, and confirm changes before renaming the file.
@@ -58,7 +71,7 @@ Example I
     	Confirm change: -rw-rw---- /Volumes/music/Example/
        	"01   foo bar.ogg" to "01.foo bar.ogg" [(y)es or (n)o] 
 
-Example II
+Example III.
 =====
    In the current folder, remove all blank spaces in names and replace them with a underscore.
    
@@ -69,7 +82,7 @@ Example II
     	File: foo bar.doc       Result: foo_bar.doc
     	File: f o o.doc	        Result: f_o_o.doc
 
-Example III
+Example IV.
 =====
    In the current folder, upper-case the first letter of each word in a filename.
    
@@ -80,7 +93,7 @@ Example III
     	File: foo_bar.doc  	    Result: Foo_Bar.doc
     	File: f_o_o.doc	   	    Result: F_O_O.doc
 
-Example IV
+Example V.
 =====
    In the current folder append a number count to all the files with a odt filetype and
    have the count-number start at 8.
@@ -92,20 +105,7 @@ Example IV
     	File: foo.odt          	Result: foo 08.odt
 		File: foo bar.odt		Result: foo bar 09.odt
 
-Example V
-=====
-   Rename all jpg files to "2013 Vacation" with a sequential number prepended to each file.
-   		
-   		frenamer -rf="Vacation 2013" -sp -e=jpg
-   
-   What happens
-
-   		File: 2345234.jpg		Result: 01 Vacation 2013.jpg
-   		File: 2345235.jpg		Result: 02 Vacation 2013.jpg
-   		...
-   		File: 2345269.jpg		Result: 35 Vacation 2013.jpg
-   
-Example VI
+Example VI.
 =====
    Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them.
    
@@ -115,7 +115,7 @@ Example VI
     	
     	File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
 
-Example VII
+Example VII.
 ===== 		
    Note about case translations: 
    If the substitute option (-s) is omitted when find option (-f) is being used, 
