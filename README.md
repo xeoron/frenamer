@@ -15,6 +15,13 @@ Note: It can run on Microsoft Windows, but is not fine-tuned for it
 
 To install
 =====
+Automated Setup
+
+	./install_frenamer.sh
+
+Manual setup
+
+	sudo chmod +x ./frenamer.pl
 	sudo cp ./frenamer.pl /usr/bin/frenamer
 
 Usage
