@@ -56,7 +56,7 @@ sub cmdlnParm(){	#display the program usage info
 	-[tu|td|tw]	Case translation: translate up, down, or tu the first letter for each word.
 	-y		Force any changes without prompting: including overwriting a file.
 	-n		Do not overwrite any files, and do not ask.
-	-x		User defined regular expression mode. See examples for more details.
+	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		Dry run test to see what will happen without committing changes to files.
 	-sa		Append sequential number: Append the next count number to a filename.

@@ -1,15 +1,16 @@
 frenamer (file renamer)
 ========
-Evolve the rename program that comes with Linux systems. That program is called, "rename", and is lacking features for bulk renaming 
-of files and folders. It is merely a tiny perl script that has not changed in over a decade. You deserve something better; we all do.
+It is time to evolve the rename program that *nix based systems use. Linux has one called, "rename", created by Larry Wall 
+and it's lacking features to better manage bulk renaming of files and folders; and has not changed in over a decade. 
+You deserve something better. We all do!
 
-When the "rename" is not good enough for bulk renaming of files and folders, frenamer makes it easy to rename many files and folders 
-using pattern matching by keywords or by using regex. It, also, includes features for case translation, along with word detection, 
-force or confirm changes, follow symbolic links, rename all files to a certain key phrase with sequential number added to each file, 
-target a group to share the same while only differing by a sequential number, dry run mode to see what changes will be made without 
-making them, to search recursively through the file-system, and even target files by file-extension.
+frenamer makes it easy to rename many files and folders using pattern matching by keywords or by using regex. It, also, includes 
+features for case translation, along with word detection, force or confirm changes, follow symbolic links, rename all files to a 
+certain key phrase with sequential number added to each file, target a group to share the same while only differing by a 
+sequential number, dry run mode to see what changes will be made without making them, to search recursively through the 
+file-system, and even target files by file-extension.
 
-This is Perl based program that works best on *nix based systems, such as Linux, freeBSD, and Mac OS X. 
+This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and Mac OS X. 
 Note: It can run on Microsoft Windows, but is not fine-tuned for it
 
 Usage
@@ -31,7 +32,7 @@ Usage
     -[tu|td|tw] Case translation-- translate up, down, or tu the first letter for each word.
     -y		    Force any changes without prompting-- including overwriting a file.
     -n		    Do not overwrite any files, and do not ask.
-    -x		    User defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
+    -x		    Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
     -dr		    Dry run test to see what will happen without committing changes to files.
     -ns		    Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		    Dry run test to see what will happen without committing changes to files.
@@ -48,7 +49,8 @@ Usage
     	
 Example I.
 =====
-   Rename all jpg files to "Vacation 2013" with a sequential number prepended to each new filename.
+   Rename all jpg files, in the current folder, to "Vacation 2013" with a sequential number 
+   prepended to each new filename.
    		
    		frenamer -rf="Vacation 2013" -sp -e=jpg
    
