@@ -31,7 +31,7 @@ Usage
     -[tu|td|tw] Case translation-- translate up, down, or tu the first letter for each word.
     -y		    Force any changes without prompting-- including overwriting a file.
     -n		    Do not overwrite any files, and do not ask.
-    -x		    User defined regular expression mode. See examples for more details.
+    -x		    User defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
     -dr		    Dry run test to see what will happen without committing changes to files.
     -ns		    Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		    Dry run test to see what will happen without committing changes to files.
@@ -61,8 +61,9 @@ Example I.
 	
 Example II.
 =====
-   In the music folder and all its subfolders find the blank spaces after the track number 
-   and replace  them with a dot. Target only ogg files, and confirm changes before renaming the file.
+   In the music folder and all its subfolders use a regular expression to find the blank spaces after 
+   the track number and replace them with a dot. Target only ogg files, and confirm changes before 
+   renaming the file.
    
     	frenamer -c -x -r -e=ogg -d=/var/music/ -f='s/^(\d\d)\s+/$1\./'
     	
