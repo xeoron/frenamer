@@ -17,7 +17,7 @@ To install
 =====
 Automated Setup
 
-	./install_frenamer.sh
+	sudo ./install_frenamer.sh
 
 Manual setup
 
