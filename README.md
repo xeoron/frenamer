@@ -13,6 +13,10 @@ file-system, and even target files by file-extension.
 This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and Mac OS X. 
 Note: It can run on Microsoft Windows, but is not fine-tuned for it
 
+To install
+=====
+	sudo cp ./frenamer.pl /usr/bin/frenamer
+
 Usage
 =====
     frenamer options -f=find -s=substitute -d=/folder/path
