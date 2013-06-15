@@ -10,9 +10,9 @@
 use strict;
 use Getopt::Long;
 use File::Find;
-use constant SLASH=>qw(/);			#default: forward SLASH for *nix based filesystem path
+use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.4 frenamer);
+my ($v,$progn)=qw(1.4.5 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount)
@@ -32,8 +32,9 @@ $SIG{INT} = \&sig_handler;
 
 
 sub sig_handler{ 	#capture Ctrl+C signals
-  my $signal=shift; 	die "\n $progn v$v: Signal($signal) ~~ Forced Exit!\n";
-}
+  my $signal=shift;
+  die "\n $progn v$v: Signal($signal) ~~ Forced Exit!\n";
+}#end sig_handler
 
 sub cmdlnParm(){	#display the program usage info 
  if($version){ print "v$v ... by Jason Campisi ... Copyleft ". DATE . " Released under the the GPL v2 or higher\n";}
@@ -127,7 +128,7 @@ sub ask($){
 sub confirmChange($$){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
   my ($currentf, $newf)=@_;  
-  my $msg=" Confirm change: " . getPerms($currentf) . " " .Cwd::getcwd() .SLASH. "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
+  my $msg=" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
 
   return ask($msg);
 }#end confirmChage($)
@@ -143,41 +144,29 @@ my ($file)=@_;
   elsif(-c $file){$file="c";}	#special character file?
   else{$file="-";}		#normal file
  return $file . $per[$perm[1]] .$per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
-}#end getPerms($)
-
-sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
- my ($dir)=@_;
-  return 1 if (! -d $dir); #skip this if not a valid directory name
-   chdir ($dir);
-   opendir DLIST,"." or die "Cannot opendir: $!\n";
-   foreach my $fname (readdir DLIST) {
-        _rFRename($fname);
-   }
-   closedir DLIST;
-}#end frename($)
+} #end getPerms($)
 
 sub _transLC($){ #take a tokenized char and make it lower case
- #print "token: $_\n";
  return uc ($_[0]); 
-}#end transToken send a single character to be uppercased
+} #end transToken($) send a single character to be uppercased
 
 sub _makeLC($) { #make-lower-case
-  return lc ($_[0]);
-}#end _makeLC
+ return lc ($_[0]);
+}#end _makeLC($)
 
 sub _transToken($){
- ($_)=@_; 
+ ($_) = @_; 
  my $tt=\&_transLC; #method call trick for use within regex
   $_ = _makeLC($_); #setup the filename to be all lowercase
 
- # look for the word boundries and uppercase the first aplha char
+ # Look for the word boundaries and uppercase the first aplha char
  # note: does not find _ word boundries.. ALSO, need e option for having the method call to work
    $_ =~s/\b([a-z])/$tt->($1)/ge;
  return $_;
-} #end _transToken
+} #end _transToken($)
 
 sub _translateWL($){    #translate 1st letter of each word to uppercase
-# ($_)=@_;
+ ($_) = @_;
   $_ = _transToken(($_[0]));
  my $ml=\&_makeLC;
 
@@ -222,7 +211,7 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
  
  #print "after: $_\n";
  return $_;
-}#end _translateWL
+} #end _translateWL($)
 
 
 sub _translate($){	#translate case either up or down. Parameter = $file
@@ -238,7 +227,7 @@ sub _translate($){	#translate case either up or down. Parameter = $file
 sub _sequential($){ #Append or prepend the file-count value to a name. Parameter = $filename
 #This subroutine returns a filename or an empty string for failing to update the passed $filename
 # Prepend example: foo.txt  -> 01 foo.txt
-# Append example:  foo.txt  -> foo 01.txt
+# Append  example: foo.txt  -> foo 01.txt
  my ($fname)=@_;
  return "" if -d $fname; #when appending a number to a file, skip folders
 
@@ -259,8 +248,8 @@ sub _sequential($){ #Append or prepend the file-count value to a name. Parameter
  	       $fname = "$fname $c";
  	  }else{ return ""; } #Can't append number to $fname  
  	  
- 	  if ( $@ and !$silent ){ #report any problems
-		  warn " >Regex problem: appending number sequence against $fname:$@\n"; 
+ 	  if ( $@ ){ #report any problems
+		  warn " >Regex problem: appending number sequence against $fname:$@\n" if (!$silent); 
 		  return "";
  	  }
   }
@@ -268,9 +257,28 @@ sub _sequential($){ #Append or prepend the file-count value to a name. Parameter
  return $fname;
 } #end _sequential($)
 
+sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
+ my ($dir)=@_; 
+ my @files;
+   return -1 if (! -d $dir); #skip path if not a valid directory name
+   chdir ($dir);
+   opendir DLIST,"." or die "Cannot opendir: $!\n";    
+     eval { @files = readdir(DLIST) };
+   closedir DLIST;
+   if ( $@ ){ #report any problems
+		  warn " >Problem reading $dir:\n >$@\n" if (!$silent); 
+		  return -1;
+   }
+   #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
+
+   foreach my $fname (@files){ _rFRename($fname); }
+   
+} #end frename($) 
+
 sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
   my ($fname)=@_;
 
+   print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    return if($fname=~m/^(\.|\.\.)$/); #if not writable, then move along to another file (!-w $fname) or 
    return if($extension and !($fname=~m/\.$extension$/)); #if filter by extension is on, discard all non-matching filetypes
    return if(-d $fname && ($renameFile or $sequentialAppend or $sequentialPrepend));
@@ -292,7 +300,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 		#using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
 		$_=$fname if !$rs;
 		eval $matchString;
-		if ($@ and !$silent){ warn " >Regex problem against file name $fname: $@s\n"; }
+		if ($@){ warn " >Regex problem against file name $fname: $@s\n" if (!$silent); }
 		else { $fname = _translate($_) if ($fname ne $_); } #if the name was changed, next try translation	
 	 }
 	 else{#all other cases that are not using Regex
@@ -301,8 +309,8 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 			   not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) )) 
 			{
 			   eval $fname=~s/$matchString/$replaceMatchWith/g; 
-			   if ($@ and !$silent){ 
-				   warn " >Regex problem against $fname:$@\n";
+			   if ($@){ 
+				   warn " >Regex problem against $fname:$@\n" if (!$silent);
 				   return;
 			   }
 			}
@@ -324,25 +332,31 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 			 print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
 		}
 		return if $noForce;	#dont want to force changes?
-		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if $verbose;  return; }
+		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like! 
 	    ++$fcount;
-	    print" Change \"$fold\" to \"$fname\"\n\t" . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n";
+	    print" Change \"$fold\" to \"$fname\"\n\t" . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n" if (!$silent);
 	   return;
 	 }
 	 
-	 eval { rename ($fold, $fname); };	#try to rename the old file to the new name
-  	 if ($@) {
-		warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  !$silent;
-  	 }else {
-		print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n" if ($verbose); 
-		#  print" Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\"\n"   if ($verbose);
-		++$fcount; # if ($verbose && !$force);
-	 }
-   }#end filename edit clause
-}#end _rFRename($;$)
+	 #lock, rename, and release the file
+	 opendir DLIST,"." or die "Cannot opendir: $!\n";
+       eval { rename ($fold, $fname); };	#try to rename the old file to the new name
+       
+       if ($@) { #where there any errors?
+          warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
+  	   }else {
+  	      if ($verbose){
+    	     print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
+             ++$fcount;
+          }
+	   }
+     closedir DLIST;
+   }#end filename rename clause
+   
+} #end _rFRename($;$)
 
 sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter = string of data to untaint, flag
  			#flag: >0 run through all filters, <=0 omit some filters
@@ -374,21 +388,9 @@ sub untaintData(){					#sanitize provided input data
    return if $noSanitize || $rx;	#don't treat regular expressions or when asked to turn sanitize mode off
    $matchString=_untaintData($matchString,1);
    $replaceMatchWith=_untaintData($replaceMatchWith,0);
-}#end untaintData
+}#end untaintData()
 
-#for debugging: bool to words translation
-sub bool ($){	return (shift >=1) ? "On" : "Off";  } #translate values to boolean On or Off string
-
-sub main(){
-  #Setup settings and messages
-   cmdlnParm() 	    if ($version || $help || ($matchString eq "" && 
-                       (!$transU && !$transD && !$transWL && !$renameFile &&
-                        !$sequentialAppend && !$sequentialPrepend))
-                    );
-					
-   $force++ 		if $silent; #if silent-mode is on, then activate force-mode
-   $noSanitize++ 	if $rx;	#don't treat regular expressions
-
+sub showUsedOptions() {
    if($verbose && !$silent){ #show which settings that will be used
 	 print "$progn v$v settings:\n";
 	 print "-->Use this data  { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$rx;
@@ -411,9 +413,15 @@ sub main(){
 	 print "-->Recursively traverse folder tree\n" if ($rs);
 	 print "-->Dry run test\n" if($dryRun);
 	 print "-->Verbose option\n" if($verbose);
-	 print "-------------------------------------------------------\n";
-   }else { untaintData();}
-   
+	 print "-------------------------------------------------------\n Locations:\n";
+   }else { untaintData(); }
+}#end showUsedOptions()
+
+sub prepData(){
+   $force++ 		if $silent; #if silent-mode is on, then activate force-mode
+   $noSanitize++ 	if $rx;	#don't treat regular expressions
+
+   showUsedOptions();
    
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
        if ($sequentialAppend eq 0 && $sequentialPrepend eq 0){ #if both flags not selected set to append
@@ -430,13 +438,22 @@ sub main(){
       ){  #should the new name use the filetype that is being targeted?
        $renameFile = sprintf("%s.%s", $renameFile, $extension); 
    }
-   
+
    if (($startCount=~/^[+]?\d+$/ and $startCount > 1) and ($sequentialAppend or $sequentialPrepend)){
        #if start-count is needed ensure the start-number is a positive integer
        $fcount = $startCount - 1; #account for 0 being the first number
-   }else { $startCount = 0; }
+   }else { $startCount = 0; }   
+}#end prepData()
 
-
+sub main(){
+  #Setup settings and messages
+   cmdlnParm() 	    if ($version || $help || ($matchString eq "" && 
+                       (!$transU && !$transD && !$transWL && !$renameFile &&
+                        !$sequentialAppend && !$sequentialPrepend))
+                    );
+  
+  prepData();
+  
  #Everything is setup, now start looking for files to work with
    if ($rs){ #recursively traverse the filesystem?
        if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links?
@@ -444,10 +461,14 @@ sub main(){
    }else{ fRename($startDir); }  #only look at the given base folder
    
    if($verbose && !$silent) {
-       print "-------------------------------------------------------\nTotal ";
-       $fcount = ($fcount - $startCount) + 1 if ($startCount=~/^[+]?\d+$/);   #does the file-count need converting? 
-       if($dryRun) { print "purposed files to change: $fcount\n";}
-       else{ print "files changed: $fcount\n"; }
+       print "-------------------------------------------------------\n"; 
+       #does the file-count need converting?
+       if (($sequentialAppend or $sequentialPrepend) && $startCount > 0) { 
+           $fcount = ($fcount - $startCount) + 1;
+       }
+       
+       if($dryRun) { print "Total purposed files to change: $fcount\n"; }
+       else{ print "Total files changed: $fcount\n"; }
    }
 
 }#end main()
