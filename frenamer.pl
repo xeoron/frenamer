@@ -347,12 +347,12 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
         eval { rename ($fold, $fname); };	#try to rename the old file to the new name
        
         if ($@) { #where there any errors?
-           warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
-  	}else {
-  	   if ($verbose){
-               print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
-               ++$fcount;
-           }
+            warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
+        }else {
+  	        if ($verbose){
+                print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
+                ++$fcount;
+            }
         }
      closedir DLIST;
    }#end filename rename clause
