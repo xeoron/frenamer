@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.7 frenamer);
+my ($v,$progn)=qw(1.4.8 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount)
@@ -355,11 +355,13 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 }
 	 
 	 #lock, rename, and release the file
-	 open (my $FH,, $fold)or die "Cannot open $fold: $!\n";
+	 if (open (my $FH,, $fold)){
 	    _lock($FH); 
 	       eval { rename ($fold, $fname); };  #try to rename the old file to the new name
 	    _unlock($FH);
-	 close $FH;
+	    close $FH;
+	 }
+	 	 
 	 if ($@) { #where there any errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
 	 }else {
