@@ -121,19 +121,22 @@ example v.
 
 example vi.
 =====
-   Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them.
+
+   Uppercase all filenames in folder "Photos" and all subfolders contain the word "nasa" in them.
    
-    	frenamer -r -tu -d=./images/ -f="nasa" -s="nasa"
+    	frenamer -r -tu -d=./Photos -f="nasa" -s="nasa"
     	
    What happens
     	
     	File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
 
 example vii.
-===== 		
+=====
+
    Note about case translations: 
    If the substitute option (-s) is omitted when find option (-f) is being used, 
-   then "NASA" will be removed from the matched filename before the case is changed.
+   then it will search for any file with the phrase "nasa" & remove it from filename 
+   before the case is changed.
    
     	frenamer -r -tu -d=./images/ -f="nasa"
     
