@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.8 frenamer);
+my ($v,$progn)=qw(1.4.9 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount)
@@ -243,8 +243,8 @@ sub _sequential($){ #Append or prepend the file-count value to a name. Parameter
 	 	   eval $fname=~s/(\.$extension)$/ $c$1/;
  	  }
  	  elsif( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
-           if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $c$1/; }
-           else { eval $fname=~s/(\..+)$/ $c$1/; }
+            if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $c$1/; } 
+            else { eval $fname=~s/(\..+)$/ $c$1/; }
  	  }
  	  elsif( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick number at the end
  	       $fname = "$fname $c";
@@ -274,7 +274,7 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
    #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
 
    foreach my $fname (@files){ _rFRename($fname); }
-   
+  return 1; 
 } #end frename($) 
 
 sub _lock ($){#expects a filehandle reference to lock a file
@@ -348,10 +348,10 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
-	 if($dryRun){ #dry run mode: display what the change will look like! 
+	 if($dryRun){ #dry run mode: display what the change will look like, then return
 	    ++$fcount;
 	    print" Change \"$fold\" to \"$fname\"\n\t" . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n" if (!$silent);
-	   return;
+	    return;
 	 }
 	 
 	 #lock, rename, and release the file
@@ -409,6 +409,7 @@ sub untaintData(){					#sanitize provided input data
 sub showUsedOptions() {
    if($verbose && !$silent){ #show which settings that will be used
 	 print "$progn v$v settings:\n";
+	 print "-->Directory location: $startDir\n";
 	 print "-->Use this data  { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$rx;
 	 untaintData();
 	 print "-->Data sanitized { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$noSanitize;
@@ -437,6 +438,13 @@ sub prepData(){
    $force++ 		if $silent; #if silent-mode is on, then activate force-mode
    $noSanitize++ 	if $rx;	#don't treat regular expressions
 
+   if (! -d $startDir ){
+       if(!$silent and $force or ask("|Error: \'$startDir\' is not a valid folder!\n| Do you want to use your current location instead? ") ){
+           $startDir=Cwd::getcwd();
+           print "|Start location changed to: $startDir\n" if ($verbose);
+       }else{ exit; }           
+   }
+
    showUsedOptions();
    
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
@@ -449,7 +457,7 @@ sub prepData(){
        $rs = 0; #disable, since it does not reset the number-count when going into each new folder 
    }   
    
-   if (($renameFile and $extension and !($renameFile =~m/$extension$/)) and
+   if (($force and $renameFile) or ($renameFile and $extension and !($renameFile =~m/$extension$/)) and 
        ask(" The replacement filename \"$renameFile\" is missing an extension: Should it to be of filetype \"$extension\"? ") 
       ){  #should the new name use the filetype that is being targeted?
        $renameFile = sprintf("%s.%s", $renameFile, $extension); 
