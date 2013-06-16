@@ -58,7 +58,7 @@ usage
     -help	    Usage options.
     -version    Version number.
     	
-example I.
+example i.
 =====
    Rename all jpg files, in the current folder, to "Vacation 2013" with a sequential number 
    prepended to each new filename.
@@ -72,20 +72,20 @@ example I.
    		...
    		File: 2345269.jpg		Result: 35 Vacation 2013.jpg
 	
-example II.
+example ii.
 =====
    In the music folder and all its subfolders use a regular expression to find the blank spaces after 
    the track number and replace them with a dot. Target only ogg files, and confirm changes before 
    renaming the file.
    
-    	frenamer -c -x -r -e=ogg -d=/var/music/ -f='s/^(\d\d)\s+/$1\./'
+    	frenamer -c -x -r -e=ogg -d=/var/music/ -f='s/^(\d+)\s+/$1./'
     	
    Result
    
     	Confirm change: -rw-rw---- /Volumes/music/Example/
        	"01   foo bar.ogg" to "01.foo bar.ogg" [(y)es or (n)o] 
 
-example III.
+example iii
 =====
    In the current folder, remove all blank spaces in names and replace them with a underscore.
    
@@ -96,7 +96,7 @@ example III.
     	File: foo bar.doc       Result: foo_bar.doc
     	File: f o o.doc	        Result: f_o_o.doc
 
-example IV.
+example iv.
 =====
    In the current folder, upper-case the first letter of each word in a filename.
    
@@ -107,7 +107,7 @@ example IV.
     	File: foo_bar.doc  	    Result: Foo_Bar.doc
     	File: f_o_o.doc	   	    Result: F_O_O.doc
 
-example V.
+example v.
 =====
    In the current folder append a number count to all the files with a odt filetype and
    have the count-number start at 8.
@@ -119,7 +119,7 @@ example V.
     	File: foo.odt          	Result: foo 08.odt
 		File: foo bar.odt		Result: foo bar 09.odt
 
-example VI.
+example vi.
 =====
    Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them.
    
@@ -129,7 +129,7 @@ example VI.
     	
     	File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
 
-example VII.
+example vii.
 ===== 		
    Note about case translations: 
    If the substitute option (-s) is omitted when find option (-f) is being used, 
