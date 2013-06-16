@@ -12,7 +12,7 @@ use Getopt::Long;
 use File::Find;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.5 frenamer);
+my ($v,$progn)=qw(1.4.6 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount)
@@ -201,9 +201,9 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 	}
    }
 
-   if(	$_=~m/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/ ){ #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
+   if( $_=~m/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/ ){ #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
       #print "$1 | 1: $1, 2: $2\n";
-      $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$ml->(".$1.$2")/e; 
+       $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$ml->(".$1.$2")/e; 
       #note: need e option for having the method call to work, & can only handle 1 method-call
    	  #print "$2 | 1: $1, 2: $2\n"; exit;
    }
@@ -242,7 +242,8 @@ sub _sequential($){ #Append or prepend the file-count value to a name. Parameter
 	 	   eval $fname=~s/(\.$extension)$/ $c$1/;
  	  }
  	  elsif( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
-	 	   eval $fname=~s/(\..+)$/ $c$1/;
+           if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $c$1/; }
+           else { eval $fname=~s/(\..+)$/ $c$1/; }
  	  }
  	  elsif( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick number at the end
  	       $fname = "$fname $c";
@@ -342,17 +343,17 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 }
 	 
 	 #lock, rename, and release the file
-	 opendir DLIST,"." or die "Cannot opendir: $!\n";
-       eval { rename ($fold, $fname); };	#try to rename the old file to the new name
+     opendir DLIST,"." or die "Cannot opendir: $!\n";
+        eval { rename ($fold, $fname); };	#try to rename the old file to the new name
        
-       if ($@) { #where there any errors?
-          warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
-  	   }else {
-  	      if ($verbose){
-    	     print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
+        if ($@) { #where there any errors?
+           warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
+  	    }else {
+  	       if ($verbose){
+             print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
              ++$fcount;
-          }
-	   }
+           }
+	    }
      closedir DLIST;
    }#end filename rename clause
    
