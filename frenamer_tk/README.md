@@ -1,6 +1,6 @@
 frenamer_tk
 ========
-This is an alpha experiment on creating a OOP GUI version of frenamer using the TK toolkit and Perl v5.x.
+This is a dead alpha experiment on creating a OOP GUI version of frenamer using the TK toolkit and Perl v5.x.
 
 frenamer_tk is a test bed for ideas to roll into frenamer and explore how a GUI version could work.
 The goal to visually makes it easy to rename many files and folders using pattern matching (find and replace keywords 
