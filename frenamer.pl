@@ -349,7 +349,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
         if ($@) { #where there any errors?
             warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
         }else {
-  	        if ($verbose){
+            if ($verbose){
                 print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
                 ++$fcount;
             }
