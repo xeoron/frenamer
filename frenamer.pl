@@ -353,20 +353,20 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	   return;
 	 }
 	 
-     #lock, rename, and release the file
-     open (my $FH,, $fold)or die "Cannot open $fold: $!\n";
-        _lock($FH); 
-           eval { rename ($fold, $fname); };  #try to rename the old file to the new name
-        _unlock($FH);
-     close $FH;
-     if ($@) { #where there any errors?
-         warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
-     }else {
-         if ($verbose){
-             print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
-             ++$fcount;
-         }
-     }
+	 #lock, rename, and release the file
+	 open (my $FH,, $fold)or die "Cannot open $fold: $!\n";
+	    _lock($FH); 
+	       eval { rename ($fold, $fname); };  #try to rename the old file to the new name
+	    _unlock($FH);
+	 close $FH;
+	 if ($@) { #where there any errors?
+	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
+	 }else {
+	     if ($verbose){
+	         print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
+	         ++$fcount;
+	     }
+	 }
    }#end filename rename clause
    
 } #end _rFRename($;$)
