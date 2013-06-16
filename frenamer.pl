@@ -340,10 +340,11 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 
 	 if(!$force  && ($confirm || -e $fname)) {### does a file exist with that same "new" filename? should it be overwritten?
 		### mod to also show file size and age of current existing file
-		if(-e $fname and !$noForce){	 
+		return if $noForce;	#dont want to force changes?
+		if(-e $fname ){	 
 			 print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
 		}
-		return if $noForce;	#dont want to force changes?
+
 		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
