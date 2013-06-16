@@ -85,7 +85,7 @@ example ii.
     	Confirm change: -rw-rw---- /Volumes/music/Example/
        	"01   foo bar.ogg" to "01.foo bar.ogg" [(y)es or (n)o] 
 
-example iii
+example iii.
 =====
    In the current folder, remove all blank spaces in names and replace them with a underscore.
    
