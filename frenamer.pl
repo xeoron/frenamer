@@ -353,7 +353,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
              print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
              ++$fcount;
            }
-	    }
+        }
      closedir DLIST;
    }#end filename rename clause
    
