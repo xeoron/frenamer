@@ -21,7 +21,7 @@ Automated setup
 
 Manual setup
 
-	sudo chmod +x ./frenamer.pl
+	chmod +x ./frenamer.pl
 	sudo cp ./frenamer.pl /usr/bin/frenamer
 
 usage
