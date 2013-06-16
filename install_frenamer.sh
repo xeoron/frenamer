@@ -12,7 +12,7 @@ if [ "$(whereis perl)" != '/usr/bin/perl' ]; then
 fi
 
 if [ "$(whoami)" != 'root' ]; then
-	echo " You do not have permission to install 'frenamer.pl'."
+	echo " You do not have permission to install 'frenamer.pl'"
 	echo " ->You must be a root user."
 	echo " ->Try instead: sudo $0"
 	exit 1;
