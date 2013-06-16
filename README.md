@@ -13,9 +13,9 @@ file-system, and even target files by file-extension.
 This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and Mac OS X. 
 Note: It can run on Microsoft Windows, but is not fine-tuned for it
 
-To install
+to install
 =====
-Automated Setup
+Automated setup
 
 	sudo ./install_frenamer.sh
 
@@ -24,7 +24,7 @@ Manual setup
 	sudo chmod +x ./frenamer.pl
 	sudo cp ./frenamer.pl /usr/bin/frenamer
 
-Usage
+usage
 =====
     frenamer options -f=find -s=substitute -d=/folder/path
     
@@ -58,7 +58,7 @@ Usage
     -help	    Usage options.
     -version    Version number.
     	
-Example I.
+example I.
 =====
    Rename all jpg files, in the current folder, to "Vacation 2013" with a sequential number 
    prepended to each new filename.
@@ -72,7 +72,7 @@ Example I.
    		...
    		File: 2345269.jpg		Result: 35 Vacation 2013.jpg
 	
-Example II.
+example II.
 =====
    In the music folder and all its subfolders use a regular expression to find the blank spaces after 
    the track number and replace them with a dot. Target only ogg files, and confirm changes before 
@@ -85,7 +85,7 @@ Example II.
     	Confirm change: -rw-rw---- /Volumes/music/Example/
        	"01   foo bar.ogg" to "01.foo bar.ogg" [(y)es or (n)o] 
 
-Example III.
+example III.
 =====
    In the current folder, remove all blank spaces in names and replace them with a underscore.
    
@@ -96,7 +96,7 @@ Example III.
     	File: foo bar.doc       Result: foo_bar.doc
     	File: f o o.doc	        Result: f_o_o.doc
 
-Example IV.
+example IV.
 =====
    In the current folder, upper-case the first letter of each word in a filename.
    
@@ -107,7 +107,7 @@ Example IV.
     	File: foo_bar.doc  	    Result: Foo_Bar.doc
     	File: f_o_o.doc	   	    Result: F_O_O.doc
 
-Example V.
+example V.
 =====
    In the current folder append a number count to all the files with a odt filetype and
    have the count-number start at 8.
@@ -119,7 +119,7 @@ Example V.
     	File: foo.odt          	Result: foo 08.odt
 		File: foo bar.odt		Result: foo bar 09.odt
 
-Example VI.
+example VI.
 =====
    Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them.
    
@@ -129,7 +129,7 @@ Example VI.
     	
     	File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
 
-Example VII.
+example VII.
 ===== 		
    Note about case translations: 
    If the substitute option (-s) is omitted when find option (-f) is being used, 
