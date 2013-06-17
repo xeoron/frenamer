@@ -13,11 +13,11 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.9 frenamer);
+my ($v,$progn)=qw(1.4.10 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
-    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount)
-	=(0, 0, 0, 0, "", "",qw(.),0,0,"","",0, 0, 0, 0, 0, 0,"", 0, 0, 0, 0, "", 0);
+    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
+	=(0, 0, 0, 0, "", "",qw(.),0,0,"","",0, 0, 0, 0, 0, 0,"", 0, 0, 0, 0, "", 0,0);
 
 
 GetOptions("f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
@@ -27,7 +27,7 @@ GetOptions("f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
-	   "rf=s" =>\$renameFile,        "sn:s" =>\$startCount);
+	   "rf=s" =>\$renameFile,        "sn:s" =>\$startCount,   "id"      =>\$idir);
 	    
 $SIG{INT} = \&sig_handler;
 
@@ -61,6 +61,7 @@ sub cmdlnParm(){	#display the program usage info
 	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		Dry run test to see what will happen without committing changes to files.
+	-id     Ignore changing directory names.
 	-sa		Append sequential number: Append the next count number to a filename.
 	-sp		Prepend sequential number: Prepend the next count number to a filename.
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
@@ -293,7 +294,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    return if($fname=~m/^(\.|\.\.)$/); #if not writable, then move along to another file (!-w $fname) or 
    return if($extension and !($fname=~m/\.$extension$/)); #if filter by extension is on, discard all non-matching filetypes
-   return if(-d $fname && ($renameFile or $sequentialAppend or $sequentialPrepend));
+   return if(($idir && -d $fname) or -d $fname && ($renameFile or $sequentialAppend or $sequentialPrepend));
 
     
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
@@ -415,6 +416,7 @@ sub showUsedOptions() {
 	 print "-->Data sanitized { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$noSanitize;
 	 print "-->Start location: $startDir\n";
 	 print "-->Follow symbolic links\n" if($fs);
+	 print "-->Ignore changing directory names\n" if($idir);	 
 	 print "-->Confirm changes\n" if($confirm);
 	 print "-->Force changes\n" if($force);
 	 print "-->Don't overwrite files\n" if($noForce);
@@ -484,14 +486,14 @@ sub main(){
        else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
    
-   if($verbose && !$silent) {
+   if(!$silent && $dryRun or $verbose) {
        print "-------------------------------------------------------\n"; 
        #does the file-count need converting?
        if (($sequentialAppend or $sequentialPrepend) && $startCount > 0) { 
            $fcount = ($fcount - $startCount) + 1;
        }
        
-       if($dryRun) { print "Total purposed files to change: $fcount\n"; }
+       if($dryRun) { print "Total purposed files to changes: $fcount\n"; }
        else{ print "Total files changed: $fcount\n"; }
    }
 
