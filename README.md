@@ -8,7 +8,7 @@ frenamer makes it easy to rename many files and folders using pattern matching b
 features for case translation, along with word detection, force or confirm changes, follow symbolic links, rename all files to a 
 certain key phrase with sequential number added to each file, target a group to share the same while only differing by a 
 sequential number, dry run mode to see what changes will be made without making them, to search recursively through the 
-file-system, and even target files by file-extension.
+file-system, ignore changing folder names, and even target files by file-extension.
 
 This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and Mac OS X. 
 Note: It can run on Microsoft Windows, but is not fine-tuned for it
