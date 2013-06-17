@@ -1,4 +1,9 @@
 #!/bin/sh -e
+#Author: Jason Campisi
+#Date: 2013
+#version 0.1.3
+#Released under the GPL v2 or higher
+
 echo "frenamer installer:";
 
 echo " Setting file to executable...";
@@ -25,4 +30,6 @@ fi
 
 echo " Installing to /usr/bin/ ...";
 cp ./frenamer.pl /usr/bin/frenamer
-echo " Setup complete!";
+echo " Setup complete."
+echo "Testing install with this command\n>frenamer -version";
+frenamer --version
