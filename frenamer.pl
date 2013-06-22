@@ -327,7 +327,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 				   return;
 			   }
 			}
-			$fname = _translate($fname) if($transD or transWL or $transU);
+			$fname = _translate($fname) if($transD or $transWL or $transU);
 			
 			if($sequentialAppend or $sequentialPrepend) {
 	 		   my $r = _sequential($fname);
