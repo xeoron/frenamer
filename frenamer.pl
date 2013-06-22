@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.10 frenamer);
+my ($v,$progn)=qw(1.4.11 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -278,12 +278,12 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
   return 1; 
 } #end frename($) 
 
-sub _lock ($){#expects a filehandle reference to lock a file
+sub _lock ($) {  #expects a filehandle reference to lock a file
   my ($FH)=@_;
    until (flock($FH, LOCK_EX)){ sleep .10; }
 }#end _lock($)
 
-sub _unlock($) {#expects a filehandle reference to unlock a file
+sub _unlock($) { #expects a filehandle reference to unlock a file
  my ($FH)=@_;
    until (flock($FH, LOCK_UN)){ sleep .10; }
 }#end _unlock($)
@@ -327,7 +327,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 				   return;
 			   }
 			}
-			$fname = _translate($fname);
+			$fname = _translate($fname) if($transD or transWL or $transU);
 			
 			if($sequentialAppend or $sequentialPrepend) {
 	 		   my $r = _sequential($fname);
@@ -365,11 +365,9 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 	 
 	 if ($@) { #where there any errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
-	 }else {
-	     if ($verbose){
-	         print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
-	         ++$fcount;
-	     }
+	 }elsif($verbose){
+	     print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
+	     ++$fcount;
 	 }
    }#end filename rename clause
    
