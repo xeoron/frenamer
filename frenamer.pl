@@ -349,7 +349,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
-	 if($dryRun){ #dry run mode: display what the change will look like, then return
+	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
 	    ++$fcount;
 	    print" Change \"$fold\" to \"$fname\"\n\t" . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n" if (!$silent);
 	    return;
@@ -476,7 +476,7 @@ sub main(){
                         !$sequentialAppend && !$sequentialPrepend))
                     );
   
-  prepData();
+   prepData();
   
  #Everything is setup, now start looking for files to work with
    if ($rs){ #recursively traverse the filesystem?
