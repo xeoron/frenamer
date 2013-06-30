@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.13 frenamer);
+my ($v,$progn)=qw(1.4.14 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -217,13 +217,18 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 
 
 sub _translate($){	#translate case either up or down. Parameter = $file
-  ($_)=@_;
-	return if $_ eq "";
-	$_ = uc $_   if($transU);
-	$_ = lc $_   if($transD);
-	$_ = _translateWL($_) if ($transWL);
-	#print "foo: $_\n";
-  return $_;
+  my ($name)=@_;
+  	
+    if ($name eq "" && ($transD or $transU or $transWL)){ 
+          return "";
+    }elsif ($transWL){
+          return _translateWL($name);
+    }elsif($transD){
+          return _makeLC($name);          
+    }elsif($transU){
+          return _makeUC($name);
+    }
+    return $name;
 }#end _translate($)
 
 sub _sequential($){ #Append or prepend the file-count value to a name. Parameter = $filename
