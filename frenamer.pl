@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.16 frenamer);
+my ($v,$progn)=qw(1.4.17 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -39,7 +39,7 @@ sub sig_handler{ 	#capture Ctrl+C signals
 
 sub cmdlnParm(){	#display the program usage info 
  if($version){ print "v$v ... by Jason Campisi ... Copyleft ". DATE . " Released under the the GPL v2 or higher\n";}
- else{  my $n=qw($1);	#use $n to overt throwing a contactation error
+ else{  my $n=qw($1);	#use $n to overt throwing a concatenation error
  print <<EOD;
    
    Usage: $progn optionalOptions -f=match -s=replaceWith -d=/folder/path
