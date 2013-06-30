@@ -48,8 +48,8 @@ usage
     -ns		    Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		    Dry run test to see what will happen without committing changes to files.
 	-id		    Ignore changing directory names.	
-	-sa		    Append sequential number: Append the next count number to a filename.
-	-sp		    Prepend sequential number: Prepend the next count number to a filename.
+	-sa		    Sequential append a number: Append the next count number to a filename.
+	-sp		    Sequential prepend a number: Prepend the next count number to a filename.
 	-rf=xxx		Completely replace filenames with this phrase & add incrementing number to it.
 				Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 				Will replace all files, unless -f or -e is set.
