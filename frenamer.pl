@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.14 frenamer);
+my ($v,$progn)=qw(1.4.15 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -62,8 +62,8 @@ sub cmdlnParm(){	#display the program usage info
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		Dry run test to see what will happen without committing changes to files.
 	-id     Ignore changing directory names.
-	-sa		Append sequential number: Append the next count number to a filename.
-	-sp		Prepend sequential number: Prepend the next count number to a filename.
+	-sa		Sequential append a number: Append the next count number to a filename.
+	-sp		Sequential prepend a number: Prepend the next count number to a filename.
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
 	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	        	Will replace all files, unless -f or -e is set. 
