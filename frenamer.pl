@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.11 frenamer);
+my ($v,$progn)=qw(1.4.12 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -148,17 +148,17 @@ my ($file)=@_;
  return $file . $per[$perm[1]] .$per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
-sub _transLC($){ #take a tokenized char and make it lower case
+sub _makeUC($){ #make it upper-case
  return uc ($_[0]); 
-} #end transToken($) send a single character to be uppercased
+} #end _makeUC($) 
 
-sub _makeLC($) { #make-lower-case
+sub _makeLC($) { #make it lower-case
  return lc ($_[0]);
 }#end _makeLC($)
 
-sub _transToken($){
+sub _transToken($){ # _transToken($) send a single character to be uppercased
  ($_) = @_; 
- my $tt=\&_transLC; #method call trick for use within regex
+ my $tt=\&_makeUC; #method call trick for use within regex
   $_ = _makeLC($_); #setup the filename to be all lowercase
 
  # Look for the word boundaries and uppercase the first aplha char
