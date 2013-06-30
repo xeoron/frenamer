@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.12 frenamer);
+my ($v,$progn)=qw(1.4.13 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -170,7 +170,7 @@ sub _transToken($){ # _transToken($) send a single character to be uppercased
 sub _translateWL($){    #translate 1st letter of each word to uppercase
  ($_) = @_;
   $_ = _transToken(($_[0]));
- my $ml=\&_makeLC;
+ my $MAKELOWER=\&_makeLC;
 
 #/* treat underscores as word boundries, also make file extensions lowercase */
  if ($_=~m/\_/){
@@ -198,14 +198,14 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 	for (my $c=0; $c <=$#n;  $c++){
          if($c==0){                                         #first case
             $string = $n[$c];
-	     }elsif($c==$#n){ $_ = $string . "." . lc ($n[$c]); #last case
+	     }elsif($c==$#n){ $_ = $string . "." . _makeLC($n[$c]); #last case
 	     }else { $string = $string . "." . $n[$c]; }        #all other cases
 	}
    }
 
    if( $_=~m/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/ ){ #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
       #print "$1 | 1: $1, 2: $2\n";
-       $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$ml->(".$1.$2")/e; 
+       $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$MAKELOWER->(".$1.$2")/e; 
       #note: need e option for having the method call to work, & can only handle 1 method-call
    	  #print "$2 | 1: $1, 2: $2\n"; exit;
    }
