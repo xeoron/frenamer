@@ -219,7 +219,7 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 sub _translate($){	#translate case either up or down. Parameter = $file
   my ($name)=@_;
   	
-    if ($name eq "" && ($transD or $transU or $transWL)){ 
+    if ($name eq ""){ 
           return "";
     }elsif ($transWL){
           return _translateWL($name);
