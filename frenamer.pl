@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2013);
-my ($v,$progn)=qw(1.4.18 frenamer);
+my ($v,$progn)=qw(1.4.19 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
@@ -237,7 +237,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name. Parameter
 # Append  example: foo.txt  -> foo 01.txt
  my ($fname)=@_;
  return "" if -d $fname; #when appending a number to a file, skip folders
-
+ 
  my $c = sprintf("%002d", $fcount + 1); #insert 0 before 1->9, therefore 1 is 01
 
   $fname = $renameFile if ($renameFile ne "");
@@ -373,7 +373,8 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 }elsif($verbose){
 	     print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
 	     ++$fcount;
-	 }
+	 }else{++$fcount;}
+	 
    }#end filename rename clause
    
 } #end _rFRename($;$)
