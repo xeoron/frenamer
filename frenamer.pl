@@ -12,7 +12,7 @@ use Getopt::Long;
 use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
-use constant DATE=>qw(2007->2013);
+use constant DATE=>qw(2007->2014);
 my ($v,$progn)=qw(1.4.19 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
@@ -20,7 +20,8 @@ my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir
 	=(0, 0, 0, 0, "", "",qw(.),0,0,"","",0, 0, 0, 0, 0, 0,"", 0, 0, 0, 0, "", 0,0);
 
 
-GetOptions("f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
+GetOptions(
+	   "f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
 	   "s:s"  =>\$replaceMatchWith,  "td" =>\$transD,         "v"       =>\$verbose,
 	   "c"    =>\$confirm,	    	 "r"  =>\$rs,             "version" =>\$version,
 	   "fs"   =>\$fs,                "x"  =>\$rx,             "help"    =>\$help,

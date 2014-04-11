@@ -36,6 +36,7 @@ usage
     
    Options
    
+    -dr		    Dry run test to see what will happen without committing changes to files.
     -r		    Recursively search the directory tree.
     -fs		    Follow symbolic links when recursive mode is on.
     -v		    Verbose-- show settings and all files that will be changed.
@@ -44,9 +45,7 @@ usage
     -y		    Force any changes without prompting-- including overwriting a file.
     -n		    Do not overwrite any files, and do not ask.
     -x		    Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
-    -dr		    Dry run test to see what will happen without committing changes to files.
     -ns		    Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
-	-dr		    Dry run test to see what will happen without committing changes to files.
 	-id		    Ignore changing directory names.	
 	-sa		    Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		    Sequential prepend a number: Starting at 1 prepend the count number to a filename.
