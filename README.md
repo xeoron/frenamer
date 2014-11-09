@@ -63,8 +63,8 @@ usage
     	
 example i.
 =====
-    	Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
-    	Include the files last modified timestamp appended to the name.
+   Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
+   Include the files last modified timestamp appended to the name.
     	
     		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -e=jpg
     		
