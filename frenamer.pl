@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2014);
-my ($v,$progn)=qw(1.5.0 frenamer);
+my ($v,$progn)=qw(1.5.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -273,8 +273,8 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
 
   $fname = $renameFile if ($renameFile ne "");
 
-  if ( $sequentialPrepend ){ #add next file count number to the start of a filename
-	   $fname = "$value $fname";
+  if( $sequentialPrepend ){ #add next file count number to the start of a filename
+ 	  $fname = "$value $fname";
   }elsif( $sequentialAppend ){ #add the next file count number to the end of a filename (before the extension)
  	  if ( $extension and $fname=~m/(\.$extension)$/){	# we know what it is, so insert the number before it 		
 	 	   eval $fname=~s/(\.$extension)$/ $value$1/;
@@ -331,7 +331,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    return if($fname=~m/^(\.|\.\.)$/); #if not writable, then move along to another file (!-w $fname) or 
    return if($extension and !($fname=~m/\.$extension$/)); #if filter by extension is on, discard all non-matching filetypes
-   return if(($idir && -d $fname) or -d $fname && ($renameFile or $sequentialAppend));
+   return if(($idir && -d $fname) or -d $fname && $renameFile);
 
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
@@ -341,7 +341,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 if($renameFile){  #replace each file name with the same name with a unique number added to it
 	 	#ex: foo_file.txt  -->  foobar 01.txt, foobar 02.txt, ... foobar n.txt
 	 	return if( $matchString ne "" && not $fname=~m/$matchString/); 
-	 	my $r = _sequential($renameFile);
+	 	my $r = _sequential($fname);
  	 	return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
  	 	$fname = $r;
  	 }
@@ -365,7 +365,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 			}
 			$fname = _translate($fname) if($transD or $transWL or $transU);
 			
-			if($timeStamp or $sequentialAppend or $sequentialPrepend) {
+			if($sequentialAppend or $sequentialPrepend or $timeStamp) {
 	 		   my $r = _sequential($fname);
  	 		   return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
  	 		   $fname = $r;
@@ -486,12 +486,12 @@ sub prepData(){
    showUsedOptions();
    
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
-       if ( $timeStamp or ($sequentialAppend eq 0 && $sequentialPrepend eq 0) or
+       if (($sequentialAppend eq 0 && $sequentialPrepend eq 0) or
        	   ($sequentialAppend && $sequentialPrepend) ){ #if both flags not or both selected set to append
            $sequentialAppend = 0;  # add the end of name
            $sequentialPrepend = 1; # add to the beginning
        }
-       $rs = 0 if (!$timeStamp && $sequentialAppend or $sequentialPrepend); #disable, since it does not reset the number-count when going into each new folder
+       $rs = 0; #disable, since it does not reset the number-count when going into each new folder
    }elsif (!$timeStamp && $sequentialAppend or $sequentialPrepend) { #if -sa or -sp disable -r mode
        $rs = 0; #disable, since it does not reset the number-count when going into each new folder 
    }elsif ($timeStamp && $sequentialAppend){
