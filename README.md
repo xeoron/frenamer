@@ -67,11 +67,7 @@ example i.
    Include the files last modified timestamp appended to the name.
     	
     		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -e=jpg
-    		
-    		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
-    		...
-    		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
-   
+
    What happens: the program is run 2 times
         
         Run 1
