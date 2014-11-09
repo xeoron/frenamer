@@ -2,7 +2,7 @@
 =comment
  Author: Jason Campisi  	
  Contact: aitsinformation at gmail.com
- Date: 9.29.2007 -> 20013
+ Date: 9.29.2007 -> 20014
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html>
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
@@ -13,11 +13,11 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2014);
-my ($v,$progn)=qw(1.4.19 frenamer);
+my ($v,$progn)=qw(1.5.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
-    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir)
-	=(0, 0, 0, 0, "", "",qw(.),0,0,"","",0, 0, 0, 0, 0, 0,"", 0, 0, 0, 0, "", 0,0);
+    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
+	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0);
 
 
 GetOptions(
@@ -28,7 +28,8 @@ GetOptions(
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
-	   "rf=s" =>\$renameFile,        "sn:s" =>\$startCount,   "id"      =>\$idir);
+	   "rf=s" =>\$renameFile,        "sn:s" =>\$startCount,   "id"      =>\$idir,
+	   "ts"	  =>\$timeStamp);
 	    
 $SIG{INT} = \&sig_handler;
 
@@ -65,6 +66,9 @@ sub cmdlnParm(){	#display the program usage info
 	-id     Ignore changing directory names.
 	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
+	-ts		Add the last modified timestamp to the filename. 
+			This is in given as a sortable format "Year-Month-Day Hour:Minute:Second"
+			Timestamp is prepended by default, but you can -sa
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
 	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	        	Will replace all files, unless -f or -e is set. 
@@ -98,11 +102,12 @@ sub cmdlnParm(){	#display the program usage info
     		...
     		file: foo bar.odt          result: foo bar 30.odt
 
-    	Rename all jpg files to "2013 Vacation" with a sequential number prepended to each file
-    		$progn -rf="Vacation 2013" -sp -e=jpg
-    		file: 2345234.jpg          result: 01 Vacation 2013.jpg
+    	Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
+    	Include the files last modified timestamp appended to the name.
+    		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -e=jpg
+    		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
     		...
-    		file: 2345269.jpg          result: 35 Vacation 2013.jpg
+    		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
    
     	Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them. 
     		$progn -r -tu -d=./images/ -f="nasa" -s="nasa"
@@ -232,39 +237,65 @@ sub _translate($){	#translate case either up or down. Parameter = $file
     return $name;
 }#end _translate($)
 
-sub _sequential($){ #Append or prepend the file-count value to a name. Parameter = $filename
+sub timeStamp($){ #Returns timestamp of filename. Parameter = $filename
+#display date info this sortable format: "Year-Month-Day Hour:Minute:Second"
+
+my ($file)=@_; 
+ return $file if $file eq "" or not (-e $file); #if the file does not exist in currently folder return.
+  
+  my $ctime = (stat($file))[9] || return $file;
+  my($sec,$min,$hour) = localtime($ctime);
+
+ use POSIX ();
+  my $fdate=POSIX::strftime("%Y-%m-%d", localtime($ctime)) . " $hour:$min:$sec" || $file;
+  print " datestamp: $file -> $fdate\n" if ($verbose);
+  
+  return $fdate;  
+}#end _datestamp
+
+sub _sequential($){ #Append or prepend the file-count value to a name or last mod dateStamp. Parameter = $filename
 #This subroutine returns a filename or an empty string for failing to update the passed $filename
 # Prepend example: foo.txt  -> 01 foo.txt
+# Prepend example: foo.txt  -> 11-09-2014 11:42:16 foo.txt
 # Append  example: foo.txt  -> foo 01.txt
+# Append  example: foo.txt  -> foo 11-09-2014 11:42:16.txt
+
  my ($fname)=@_;
- return "" if -d $fname; #when appending a number to a file, skip folders
- 
- my $c = sprintf("%002d", $fcount + 1); #insert 0 before 1->9, therefore 1 is 01
+  return $fname if ( $extension and $fname !~m/(\.$extension)$/);
+  
+  my $value = "";
+  if ($timeStamp){
+      $value = timeStamp($fname);
+  }else {
+      return "" if -d $fname; #when appending a number to a file, skip folders
+      $value = sprintf("%002d", $fcount + 1); #insert 0 before 1->9, therefore 1 is 01
+  }
 
   $fname = $renameFile if ($renameFile ne "");
 
   if ( $sequentialPrepend ){ #add next file count number to the start of a filename
-	   $fname = "$c $fname";
+	   $fname = "$value $fname";
   }elsif( $sequentialAppend ){ #add the next file count number to the end of a filename (before the extension)
  	  if ( $extension and $fname=~m/(\.$extension)$/){	# we know what it is, so insert the number before it 		
-	 	   eval $fname=~s/(\.$extension)$/ $c$1/;
+	 	   eval $fname=~s/(\.$extension)$/ $value$1/;
  	  }
  	  elsif( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
-            if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $c$1/; } 
-            else { eval $fname=~s/(\..+)$/ $c$1/; }
+            if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $value$1/; } 
+            else { eval $fname=~s/(\..+)$/ $value$1/; }
  	  }
- 	  elsif( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick number at the end
- 	       $fname = "$fname $c";
- 	  }else{ return ""; } #Can't append number to $fname  
+ 	  elsif( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick value at the end
+ 	       $fname = "$fname $value";
+ 	  }else{ return ""; } #Can't append value to $fname  
  	  
  	  if ( $@ ){ #report any problems
-		  warn " >Regex problem: appending number sequence against $fname:$@\n" if (!$silent); 
+		  warn " >Regex problem: appending value sequence against $fname:$@\n" if (!$silent); 
 		  return "";
  	  }
   }
   
  return $fname;
 } #end _sequential($)
+
 
 sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
  my ($dir)=@_; 
@@ -300,12 +331,11 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    return if($fname=~m/^(\.|\.\.)$/); #if not writable, then move along to another file (!-w $fname) or 
    return if($extension and !($fname=~m/\.$extension$/)); #if filter by extension is on, discard all non-matching filetypes
-   return if(($idir && -d $fname) or -d $fname && ($renameFile or $sequentialAppend or $sequentialPrepend));
+   return if(($idir && -d $fname) or -d $fname && ($renameFile or $sequentialAppend));
 
-    
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
-   if($rx || $rs || $fname=~m/$matchString/ || $trans || ($sequentialAppend or $sequentialPrepend)){ #change name if
+   if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
 	 my $fold=$fname;  
    	 	 
 	 if($renameFile){  #replace each file name with the same name with a unique number added to it
@@ -335,7 +365,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 			}
 			$fname = _translate($fname) if($transD or $transWL or $transU);
 			
-			if($sequentialAppend or $sequentialPrepend) {
+			if($timeStamp or $sequentialAppend or $sequentialPrepend) {
 	 		   my $r = _sequential($fname);
  	 		   return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
  	 		   $fname = $r;
@@ -432,6 +462,7 @@ sub showUsedOptions() {
 	 print "-->Case-Translate 1st letter per word to uppercase\n" if($transWL);
 	 print "-->Sequential file count: append number to file name\n" if($sequentialAppend);
 	 print "-->Sequential file count: prepend number to file name\n" if($sequentialPrepend);
+ 	 print "-->Timestamp in name\n" if ($timeStamp);
 	 print "-->Name all files as $renameFile\n" if($renameFile);
  	 print "-->Start count=$startCount\n" if ($startCount);
 	 print "-->Recursively traverse folder tree\n" if ($rs);
@@ -455,14 +486,19 @@ sub prepData(){
    showUsedOptions();
    
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
-       if ($sequentialAppend eq 0 && $sequentialPrepend eq 0){ #if both flags not selected set to append
-           $sequentialAppend = 1;
-           $sequentialPrepend = 0;
+       if ( $timeStamp or ($sequentialAppend eq 0 && $sequentialPrepend eq 0) or
+       	   ($sequentialAppend && $sequentialPrepend) ){ #if both flags not or both selected set to append
+           $sequentialAppend = 0;  # add the end of name
+           $sequentialPrepend = 1; # add to the beginning
        }
-       $rs = 0; #disable, since it does not reset the number-count when going into each new folder
-   }elsif ($sequentialAppend or $sequentialPrepend) { #if -sa or -sp disable -r mode
+       $rs = 0 if (!$timeStamp && $sequentialAppend or $sequentialPrepend); #disable, since it does not reset the number-count when going into each new folder
+   }elsif (!$timeStamp && $sequentialAppend or $sequentialPrepend) { #if -sa or -sp disable -r mode
        $rs = 0; #disable, since it does not reset the number-count when going into each new folder 
-   }   
+   }elsif ($timeStamp && $sequentialAppend){
+   		$sequentialPrepend = 0;
+   }elsif ($timeStamp){
+   	   $sequentialPrepend = 1;
+   }
    
    if (($force and $renameFile) or ($renameFile and $extension and !($renameFile =~m/$extension$/)) and 
        ask(" The replacement filename \"$renameFile\" is missing an extension: Should it to be of filetype \"$extension\"? ") 
@@ -480,7 +516,7 @@ sub main(){
   #Setup settings and messages
    cmdlnParm() 	    if ($version || $help || ($matchString eq "" && 
                        (!$transU && !$transD && !$transWL && !$renameFile &&
-                        !$sequentialAppend && !$sequentialPrepend))
+                        !$timeStamp && !$sequentialAppend && !$sequentialPrepend))
                     );
   
    prepData();

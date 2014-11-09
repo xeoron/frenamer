@@ -49,6 +49,9 @@ usage
 	-id		    Ignore changing directory names.	
 	-sa		    Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		    Sequential prepend a number: Starting at 1 prepend the count number to a filename.
+	-ts		    Add the last modified timestamp to the filename. 
+				This is in given a name sortable format "Year-Month-Day Hour:Minute:Second"
+				Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx		Completely replace filenames with this phrase & add incrementing number to it.
 				Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 				Will replace all files, unless -f or -e is set.
@@ -60,17 +63,31 @@ usage
     	
 example i.
 =====
-   Rename all jpg files, in the current folder, to "Vacation 2013" with a sequential number 
-   prepended to each new filename.
-   		
-   		frenamer -rf="Vacation 2013" -sp -e=jpg
-   
-   What happens
+    	Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
+    	Include the files last modified timestamp appended to the name.
+    		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -e=jpg
+    		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
+    		...
+    		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
 
-   		File: 2345234.jpg		Result: 01 Vacation 2013.jpg
-   		File: 2345235.jpg		Result: 02 Vacation 2013.jpg
+   Rename all jpg files, in the current folder, to "Vacation" with a sequential number prepended 
+   to each new filename, then include the timestamp appended to them.
+   		
+   		frenamer -rf="Vacation 2013" -sp -e=jpg && $frenamer -ts -sa -e=jpg
+   
+   What happens: the program is run 2 times
+        
+        Run 1
+   		File: 2345234.jpg		Result: 01 Vacation.jpg
+   		File: 2345235.jpg		Result: 02 Vacation.jpg
    		...
-   		File: 2345269.jpg		Result: 35 Vacation 2013.jpg
+   		File: 2345269.jpg		Result: 35 Vacation.jpg
+   		
+   		Run 2
+   		File: 01 Vacation.jpg	Result: 01 Vacation 2013-06-14 19:28:53.jpg
+   		File: 02 Vacation.jpg	Result: 02 Vacation 2013-06-14 19:30:00.jpg
+   		...
+   		File: 35 Vacation.jpg	Result: 35 Vacation 2013-06-15 8:14:53.jpg
 	
 example ii.
 =====
