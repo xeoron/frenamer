@@ -44,8 +44,10 @@ usage
     -[tu|td|tw] Case translation-- translate up, down, or tu the first letter for each word.
     -y		    Force any changes without prompting-- including overwriting a file.
     -n		    Do not overwrite any files, and do not ask.
-    -x		    Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
-    -ns		    Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
+    -x		    Toggle on user defined regular expression mode. 
+    			Set -f for substitution: -f='s/bar/foo/'
+    -ns		    Do not sanitize find and replace data. 
+    			Note: this is turned off when -x mode is active.
 	-id		    Ignore changing directory names.	
 	-sa		    Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		    Sequential prepend a number: Starting at 1 prepend the count number to a filename.
@@ -53,8 +55,9 @@ usage
 				This is in given a name sortable format "Year-Month-Day Hour:Minute:Second"
 				Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx		Completely replace filenames with this phrase & add incrementing number to it.
-				Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
-				Will replace all files, unless -f or -e is set.
+				Only targets files within a folder.
+				Defaults to -sa but can -sp, option -r is disabled, and
+				will replace all files, unless -f or -e is set.
 	-sn=xxx 	Set the start-number count, for -sa, -sp, or -rf mode, to any positive integer.
 	-e=xxx		Target to only files with file extension XXX
     -silent	    Silent mode-- suppress all warnings, force all changes, and omit displaying results
