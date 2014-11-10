@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2014);
-my ($v,$progn)=qw(1.5.1 frenamer);
+my ($v,$progn)=qw(1.5.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -68,7 +68,7 @@ sub cmdlnParm(){	#display the program usage info
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		Add the last modified timestamp to the filename. 
 			This is in given as a sortable format "Year-Month-Day Hour:Minute:Second"
-			Timestamp is prepended by default, but you can -sa
+			Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
 	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	        	Will replace all files, unless -f or -e is set. 
@@ -83,7 +83,7 @@ sub cmdlnParm(){	#display the program usage info
 	In the music folder and all its subfolders replace the blank spaces after a the track number 
 	with a dot. Target only ogg files, and confirm changes before renaming the file.
     		$progn -c -x -r -e=ogg -d=/var/music/ -f='s/^(\\d\\d)\\s+/$n\./'
-    	  Result:
+    	    Result:
     		Confirm change: -rw-rw---- /Volumes/music/Example/
          	"01   foo bar.ogg" to "01.foo bar.ogg" [(y)es or (n)o] 
 
@@ -104,7 +104,7 @@ sub cmdlnParm(){	#display the program usage info
 
     	Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
     	Include the files last modified timestamp appended to the name.
-    		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -e=jpg
+    		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -f="Vacation" -e=jpg
     		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
     		...
     		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
@@ -164,12 +164,12 @@ sub _makeLC($) { #make it lower-case
 
 sub _transToken($){ # _transToken($) send a single character to be uppercased
  ($_) = @_; 
- my $tt=\&_makeUC; #method call trick for use within regex
+ my $TT=\&_makeUC; #method call trick for use within regex
   $_ = _makeLC($_); #setup the filename to be all lowercase
 
  # Look for the word boundaries and uppercase the first aplha char
  # note: does not find _ word boundries.. ALSO, need e option for having the method call to work
-   $_ =~s/\b([a-z])/$tt->($1)/ge;
+   $_ =~s/\b([a-z])/$TT->($1)/ge;
  return $_;
 } #end _transToken($)
 
@@ -238,20 +238,20 @@ sub _translate($){	#translate case either up or down. Parameter = $file
 }#end _translate($)
 
 sub timeStamp($){ #Returns timestamp of filename. Parameter = $filename
-#display date info this sortable format: "Year-Month-Day Hour:Minute:Second"
+#display date info sortable format: "Year-Month-Day Hour:Minute:Second"
 
 my ($file)=@_; 
  return $file if $file eq "" or not (-e $file); #if the file does not exist in currently folder return.
   
-  my $ctime = (stat($file))[9] || return $file;
+  my $ctime = (stat($file))[9] || return "timeStampError";
   my($sec,$min,$hour) = localtime($ctime);
 
  use POSIX ();
-  my $fdate=POSIX::strftime("%Y-%m-%d", localtime($ctime)) . " $hour:$min:$sec" || $file;
+  my $fdate=POSIX::strftime("%Y-%m-%d", localtzime($ctime)) . " $hour:$min:$sec" || "timeStampError";
   print " datestamp: $file -> $fdate\n" if ($verbose);
   
   return $fdate;  
-}#end _datestamp
+}#end timeStamp
 
 sub _sequential($){ #Append or prepend the file-count value to a name or last mod dateStamp. Parameter = $filename
 #This subroutine returns a filename or an empty string for failing to update the passed $filename
@@ -295,7 +295,6 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
   
  return $fname;
 } #end _sequential($)
-
 
 sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
  my ($dir)=@_; 
