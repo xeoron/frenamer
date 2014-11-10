@@ -69,17 +69,17 @@ example i.
    Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
    appended the files last modified timestamp to the name.
     	
-    		frenamer -rf="Vacation" -sp -e=jpg && frenamer -ts -sa -e=jpg
+    		frenamer -rf="Vacation" -sp -e=jpg && frenamer -ts -sa -f="Vacation" -e=jpg
 
    What happens: the program is run 2 times
         
-        Run 1
+        Run 1 targets all jpg files
    		File: 2345234.jpg		Result: 01 Vacation.jpg
    		File: 2345235.jpg		Result: 02 Vacation.jpg
    		...
    		File: 2345269.jpg		Result: 35 Vacation.jpg
    		
-   		Run 2
+   		Run 2 targets jpg files with "Vacation" in the filename
    		File: 01 Vacation.jpg	Result: 01 Vacation 2013-06-14 19:28:53.jpg
    		File: 02 Vacation.jpg	Result: 02 Vacation 2013-06-14 19:30:00.jpg
    		...
