@@ -63,7 +63,7 @@ sub cmdlnParm(){	#display the program usage info
 	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-dr		Dry run test to see what will happen without committing changes to files.
-	-id     Ignore changing directory names.
+	-id		Ignore changing directory names.
 	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		Add the last modified timestamp to the filename. 
