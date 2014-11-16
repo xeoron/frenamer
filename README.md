@@ -52,7 +52,7 @@ usage
 	-sa		    Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		    Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		    Add the last modified timestamp to the filename. 
-				This is in given a name sortable format "Year-Month-Day Hour:Minute:Second"
+				This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
 				Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx		Completely replace filenames with this phrase & add incrementing number to it.
 				Only targets files within a folder.
