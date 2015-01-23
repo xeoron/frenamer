@@ -2,7 +2,7 @@
 =comment
  Author: Jason Campisi  	
  Contact: aitsinformation at gmail.com
- Date: 9.29.2007 -> 20014
+ Date: 9.29.2007 -> 20015
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html>
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2014);
-my ($v,$progn)=qw(1.5.3 frenamer);
+my ($v,$progn)=qw(1.5.4 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -150,7 +150,7 @@ my ($file)=@_;
   if(-l $file){$file="l";} 	#symbolic link?
   elsif(-d $file){$file="d";}	#directory?
   elsif(-c $file){$file="c";}	#special character file?
-  else{$file="-";}		#normal file
+  else{$file="-";}				#normal file
  return $file . $per[$perm[1]] .$per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
@@ -486,7 +486,7 @@ sub prepData(){
    
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
        if (($sequentialAppend eq 0 && $sequentialPrepend eq 0) or
-       	   ($sequentialAppend && $sequentialPrepend) ){ #if both flags not or both selected set to append
+       	   ($sequentialAppend && $sequentialPrepend) ){ #if both flags not set or both selected set to append
            $sequentialAppend = 0;  # add the end of name
            $sequentialPrepend = 1; # add to the beginning
        }
