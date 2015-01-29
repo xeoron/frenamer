@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2015);
-my ($v,$progn)=qw(1.5.4 frenamer);
+my ($v,$progn)=qw(1.5.5 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -533,8 +533,8 @@ sub main(){
            $fcount = ($fcount - $startCount) + 1;
        }
        
-       if($dryRun) { print "Total purposed files to changes: $fcount\n"; }
-       else{ print "Total files changed: $fcount\n"; }
+       if($dryRun) { print "Total Purposed Files To Changes: $fcount\n"; }
+       else{ print "Total Files Changed: $fcount\n"; }
    }
 
 }#end main()
