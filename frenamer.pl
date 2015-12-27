@@ -2,7 +2,7 @@
 =comment
  Author: Jason Campisi  	
  Contact: aitsinformation at gmail.com
- Date: 9.29.2007 -> 20015
+ Date: 9.29.2007 -> 2016
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html>
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
@@ -12,8 +12,8 @@ use Getopt::Long;
 use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
-use constant DATE=>qw(2007->2015);
-my ($v,$progn)=qw(1.5.5 frenamer);
+use constant DATE=>qw(2007->2016);
+my ($v,$progn)=qw(1.5.6 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
