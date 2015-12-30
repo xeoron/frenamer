@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.5.6 frenamer);
+my ($v,$progn)=qw(1.5.7 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -386,7 +386,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
 	    ++$fcount;
-	    print" Change \"$fold\" to \"$fname\"\n\t" . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n" if (!$silent);
+	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
 	    return;
 	 }
 	 
@@ -401,7 +401,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 if ($@) { #where there any errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
 	 }elsif($verbose){
-	     print" Updated \"$fold\" to \"$fname\"\n\t" . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n"; 
+	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
 	     ++$fcount;
 	 }else{++$fcount;}
 	 
