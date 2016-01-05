@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.5.8 frenamer);
+my ($v,$progn)=qw(1.6.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -147,11 +147,11 @@ my ($file)=@_;
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
  my @per=("---","--x","-w-","-wx","r--","r-x","rw-","rwx");  #for decyphering file permission settings
 
-  if(-l $file){$file="l";} 	#symbolic link?
+  if(-l $file){$file="l";}		#symbolic link?
   elsif(-d $file){$file="d";}	#directory?
   elsif(-c $file){$file="c";}	#special character file?
   else{$file="-";}				#normal file
- return $file . $per[$perm[1]] .$per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
+ return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
 sub _makeUC($){ #make it upper-case
@@ -186,9 +186,9 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
         for ( my $c=0; $c <=$#n;  $c++){
              $n[$c] = _transToken($n[$c]);
              if($c==0){                                         #first case
-                if ($_=~m/^\_/){ $string = "_" . $n[$c];          #check to see if it starts with a underscore
-                }else {$string = $n[$c]; }                        #non-dot file format
-             }elsif($c==$#n){ $_ = $string . "_" . ($n[$c]); #last case
+                if ($_=~m/^\_/){ $string = "_" . $n[$c];        #check to see if it starts with a underscore
+                }else {$string = $n[$c]; }                      #non-dot file format
+             }elsif($c==$#n){ $_ = $string . "_" . ($n[$c]); 	#last case
              }else { $string = $string . "_" . $n[$c]; }        #all other cases
         }
    }
@@ -202,10 +202,10 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
    my @n; my $string="";
    if (@n=split /\./, $_){ #split name into sections denoted by the '.' sybmol used in the name
 	for (my $c=0; $c <=$#n;  $c++){
-         if($c==0){                                         #first case
+         if($c==0){                                         	#first case
             $string = $n[$c];
 	     }elsif($c==$#n){ $_ = $string . "." . _makeLC($n[$c]); #last case
-	     }else { $string = $string . "." . $n[$c]; }        #all other cases
+	     }else { $string = $string . "." . $n[$c]; }        	#all other cases
 	}
    }
 
@@ -220,7 +220,6 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
  #print "after: $_\n";
  return $_;
 } #end _translateWL($)
-
 
 sub _translate($){	#translate case either up or down. Parameter = $file
   my ($name)=@_;
@@ -328,9 +327,13 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
   my ($fname)=@_;
 
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
-   return if($fname=~m/^(\.|\.\.)$/); #if not writable, then move along to another file (!-w $fname) or 
-   return if($extension and !($fname=~m/\.$extension$/)); #if filter by extension is on, discard all non-matching filetypes
-   return if(($idir && -d $fname) or -d $fname && $renameFile);
+   return if($fname=~m/^(\.|\.\.)$/);                           #if a dot file, then move along
+   return if($extension and !($fname=~m/\.$extension$/));       #if filter by extension is on, discard all non-matching filetypes
+   return if(($idir && -d $fname) or -d $fname && $renameFile); #ignore changing folder-names
+   if (!(-w $fname)) {                                          #if not writable
+   		warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
+   		return;
+   }
 
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
@@ -471,7 +474,7 @@ sub showUsedOptions() {
    }else { untaintData(); }
 }#end showUsedOptions()
 
-sub prepData(){
+sub prepData(){  # prep Data settings before the program does the real work.
    $force++ 		if $silent; #if silent-mode is on, then activate force-mode
    $noSanitize++ 	if $rx;	#don't treat regular expressions
 
