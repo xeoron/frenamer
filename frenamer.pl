@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.5.7 frenamer);
+my ($v,$progn)=qw(1.5.8 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -247,7 +247,7 @@ my ($file)=@_;
   my($sec,$min,$hour) = localtime($ctime);
 
  use POSIX ();
-  my $fdate=POSIX::strftime("%Y-%m-%d", localtzime($ctime)) . " $hour:$min:$sec" || "timeStampError";
+  my $fdate=POSIX::strftime("%Y-%m-%d", localtime($ctime)) . " $hour:$min:$sec" || "timeStampError";
   print " datestamp: $file -> $fdate\n" if ($verbose);
   
   return $fdate;  
