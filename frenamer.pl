@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.6.0 frenamer);
+my ($v,$progn)=qw(1.6.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -327,10 +327,11 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
   my ($fname)=@_;
 
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
-   return if($fname=~m/^(\.|\.\.)$/);                           #if a dot file, then move along
-   return if($extension and !($fname=~m/\.$extension$/));       #if filter by extension is on, discard all non-matching filetypes
-   return if(($idir && -d $fname) or -d $fname && $renameFile); #ignore changing folder-names
-   if (!(-w $fname)) {                                          #if not writable
+   return if( $fname=~m/^(\.|\.\.)$/ or                          #if a dot file 
+             ($extension and $fname !~m/(\.$extension)$/) or     #if filter by extension is on, discard all non-matching filetypes
+             ($idir && -d $fname) or (-d $fname && $renameFile)  #if ignore changing folder-names
+            );                                                   #if yes to any, then move along
+   if (!(-w $fname)) {                                           #if not writable, then move along
    		warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
    		return;
    }
