@@ -41,7 +41,7 @@ usage
     -fs		    Follow symbolic links when recursive mode is on.
     -v		    Verbose-- show settings and all files that will be changed.
     -c		    Confirm each file change before doing so.
-    -[tu|td|tw] Case translation-- translate up, down, or tu the first letter for each word.
+    -[tu|td|tw] Case translation-- translate up, down, or uppercase the first letter for each word.
     -y		    Force any changes without prompting-- including overwriting a file.
     -n		    Do not overwrite any files, and do not ask.
     -x		    Toggle on user defined regular expression mode. 

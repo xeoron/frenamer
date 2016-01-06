@@ -13,7 +13,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.6.1 frenamer);
+my ($v,$progn)=qw(1.6.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
@@ -57,7 +57,7 @@ sub cmdlnParm(){	#display the program usage info
 	-fs		Follow symbolic links when recursive mode is on.
 	-v		Verbose: show settings and all files that will be changed.
 	-c		Confirm each file change before doing so.
-	-[tu|td|tw]	Case translation: translate up, down, or tu the first letter for each word.
+	-[tu|td|tw]	Case translation: translate up, down, or uppercase the first letter for each word.
 	-y		Force any changes without prompting: including overwriting a file.
 	-n		Do not overwrite any files, and do not ask.
 	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
@@ -254,10 +254,10 @@ my ($file)=@_;
 
 sub _sequential($){ #Append or prepend the file-count value to a name or last mod dateStamp. Parameter = $filename
 #This subroutine returns a filename or an empty string for failing to update the passed $filename
-# Prepend example: foo.txt  -> 01 foo.txt
-# Prepend example: foo.txt  -> 11-09-2014 11:42:16 foo.txt
-# Append  example: foo.txt  -> foo 01.txt
-# Append  example: foo.txt  -> foo 11-09-2014 11:42:16.txt
+# Prepend example 1: foo.txt  -> 01 foo.txt
+# Prepend example 2: foo.txt  -> 11-09-2014 11:42:16 foo.txt
+#  Append example 1: foo.txt  -> foo 01.txt
+#  Append example 2: foo.txt  -> foo 11-09-2014 11:42:16.txt
 
  my ($fname)=@_;
   return $fname if ( $extension and $fname !~m/(\.$extension)$/);
