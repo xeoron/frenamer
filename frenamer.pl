@@ -72,7 +72,7 @@ sub cmdlnParm(){	#display the program usage info
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
 	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	        	Will replace all files, unless -f or -e is set. 
-	-sn=xxx 	Set the start-number count, for -sa, -sp, or -rf mode, to any integer > 0.
+	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
 	-e=xxx		Target to only files with file extension XXX
 	-silent		Silent mode-- suppress all warnings, force all changes, and omit displaying results
 	-help		Usage options.

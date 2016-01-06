@@ -58,7 +58,7 @@ usage
 				Only targets files within a folder.
 				Defaults to -sa but can -sp, option -r is disabled, and
 				will replace all files, unless -f or -e is set.
-	-sn=xxx 	Set the start-number count, for -sa, -sp, or -rf mode, to any positive integer.
+	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
 	-e=xxx		Target to only files with file extension XXX
     -silent	    Silent mode-- suppress all warnings, force all changes, and omit displaying results
     -help	    Usage options.
