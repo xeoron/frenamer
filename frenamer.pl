@@ -9,7 +9,7 @@
 
 #new feature: target only folders        <-- -tdn
 #new feature: target by filesize      	 <--DONE  example -tf=200.32kb
-#new feature: target by filessize type   <--DONE  example -tst=mb
+#new feature: target by filessize type   <--DONE  example -tfu=mb
 use strict;
 use Getopt::Long;
 use File::Find;
@@ -68,7 +68,7 @@ sub cmdlnParm(){	#display the program usage info
 	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-id		Filter: ignore changing directory names.
-	-tdn	Filter: target directory names, only.
+	-tdn 	Filter: target directory names, only.
 	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		Add the last modified timestamp to the filename. 
