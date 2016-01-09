@@ -33,7 +33,7 @@ GetOptions(
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
 	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
-	   "ts"   =>\$timeStamp,         "tdn" =>\$targetDirName, "tst:s"   =>\$targetSizetype,
+	   "ts"   =>\$timeStamp,         "tdn" =>\$targetDirName, "tfu:s"   =>\$targetSizetype,
 	   "tf:s" =>\$targetFilesize);
 	    
 $SIG{INT} = \&sig_handler;
@@ -67,8 +67,8 @@ sub cmdlnParm(){	#display the program usage info
 	-n		Do not overwrite any files, and do not ask.
 	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
-	-id		Ignore changing directory names.
-	-tdn	Target directory names, only.
+	-id		Filter: ignore changing directory names.
+	-tdn	Filter: target directory names, only.
 	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		Add the last modified timestamp to the filename. 
@@ -77,11 +77,11 @@ sub cmdlnParm(){	#display the program usage info
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
 	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	        	Will replace all files, unless -f, -e, -tf, or -tst is set. 
+	-e=xxx		Filter target only files with file extension XXX
 	-tf=xxx		Filter target files by filesize that are at least X big. Example 1b, 10.24kb, 42.02MB, etc.
-	-tst=xxx	Filter target files by filesize type only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
+	-tfu=xxx	Filter target by filesize unit only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
 	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
 	-[tu|td|tw]	Case translation: translate up, down, or uppercase the first letter for each word.
-	-e=xxx		Target only files with file extension XXX
 	-silent		Silent mode-- suppress all warnings, force all changes, and omit displaying results
 	-help		Usage options.
 	-version	Version number.
@@ -104,8 +104,8 @@ sub cmdlnParm(){	#display the program usage info
     		file: 01.boo bar.ogg      result: 01.Foo Bar.ogg
     		
     	In the current folder append a number count to all the files with a odt filetype and
-    	have the number count start at 8.
-    		$progn -sa -sn=8 -e=odt
+    	have the number count start at 8 for files 1MB or larger.
+    		$progn -tf="1mb" -sa -sn=8 -e=odt
     		file: foo.odt              result: foo 08.odt
     		...
     		file: foo bar.odt          result: foo bar 30.odt
@@ -141,10 +141,10 @@ sub ask($){
  return $answer=~m/[y|yes]/i;# ? 1 : 0 	 bool value of T/F
 }#end ask($)
 
-sub confirmChange($$){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
+sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
-  my ($currentf, $newf)=@_;  
-  my $msg=" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
+  my ($currentf, $newf, @sizeType)=@_;  
+  my $msg=" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
 
   return ask($msg);
 }#end confirmChage($)
@@ -188,7 +188,6 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 
 #/* treat underscores as word boundries, also make file extensions lowercase */
  if ($_=~m/\_/){
-   #print "before underscore filter: $_\n";
    my @n; my $string="";
    if (@n=split /\_/, $_){ #split name into sections denoted by the '_' sybmol used in the name
         for ( my $c=0; $c <=$#n;  $c++){
@@ -200,7 +199,6 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
              }else { $string = $string . "_" . $n[$c]; }        #all other cases
         }
    }
-   #print "after underscore filter: $_\n";
  }
 
 #/* deal with dot files and file extensions  */
@@ -216,16 +214,12 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 	     }else { $string = $string . "." . $n[$c]; }        	#all other cases
 	}
    }
-
-   if( $_=~m/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/ ){ #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
-      #print "$1 | 1: $1, 2: $2\n";
-       $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$MAKELOWER->(".$1.$2")/e; 
-      #note: need e option for having the method call to work, & can only handle 1 method-call
-   	  #print "$2 | 1: $1, 2: $2\n"; exit;
-   }
- }
+   
+   #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
+   #note: need e option for having the method call to work, & can only handle 1 method-call
+   $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$MAKELOWER->(".$1.$2")/e; 
+ }#end elsif
  
- #print "after: $_\n";
  return $_;
 } #end _translateWL($)
 
@@ -377,7 +371,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
  	 	return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
  	 	$fname = $r;
  	 }
- 	 elsif ($rx){
+ 	 elsif($rx){
 		#using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
 		$_=$fname if !$rs;
 		eval $matchString;
@@ -414,7 +408,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 			 print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
 		}
 
-		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
+		if(!confirmChange($fold,$fname,@sizeType)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like, update count then return

@@ -48,10 +48,11 @@ usage
     			Set -f for substitution: -f='s/bar/foo/'
     -ns		    Do not sanitize find and replace data. 
     			Note: this is turned off when -x mode is active.
-	-id		    Ignore changing directory names.
-	-tdn		Target directory names, only.
-	-tf=xxx		Filter target files by filesize that are at least X big. Example 1b, 10.24kb, or 42.02mb.
-	-tst=xxx	Filter target filesize type only. Choose one of these:
+	-id		    Filter: Ignore changing directory names.
+	-tdn		Filter: target directory names, only.
+	-e=xxx		Filter: target only files with file extension XXX
+	-tf=xxx		Filter: target files by filesize that are at least X big. Example 1b, 10.24kb, or 42.02mb.
+	-tfu=xxx	Filter: target filesize unit only. Choose one of these:
     			[B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
     			[TB]terabyte, [PB]petabyte, [EB]exabyte, [ZB]zettabyte, [YB]yottabyte.
 	-sa		    Sequential append a number: Starting at 1 append the count number to a filename.
@@ -64,7 +65,6 @@ usage
 				Defaults to -sa but can -sp, option -r is disabled, and
 				will replace all files, unless -f, -e, -tf, or -tst is set.
 	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
-	-e=xxx		Target only files with file extension XXX
     -silent	    Silent mode-- suppress all warnings, force all changes, and omit displaying results
     -help	    Usage options.
     -version    Version number.
@@ -93,15 +93,15 @@ example i.
 example ii.
 =====
    In the music folder and all its subfolders use a regular expression to find the blank spaces after 
-   the track number and replace them with a dot. Target only ogg files, and confirm changes before 
+   the track number and replace them with a dot. Target only mp3 files, and confirm changes before 
    renaming the file.
    
-    	frenamer -c -x -r -e=ogg -d=/var/music/ -f='s/^(\d+)\s+/$1./'
+    	frenamer -c -x -r -e=mp3 -d=/var/music/ -f='s/^(\d+)\s+/$1./'
     	
    Result
    
-    	Confirm change: -rw-rw---- /Volumes/music/Example/
-       	"01   foo bar.ogg" to "01.foo bar.ogg" [(y)es or (n)o] 
+    	Confirm change: -rw-rw---- /Volumes/music/Example/ 3.45MB
+       	"01   foo bar.mp3" to "01.foo bar.mp3" [(y)es or (n)o] 
 
 example iii.
 =====
@@ -128,14 +128,15 @@ example iv.
 example v.
 =====
    In the current folder append a number count to all the files with a odt filetype and
-   have the count-number start at 8.
+   have the count-number start at 8 for files 1MB or larger.
     	
-    	frenamer -sa -sn=8 -e=odt
+    	frenamer -tf="1mb" -sa -sn=8 -e=odt
 
    What happens
    
     	File: foo.odt          	Result: foo 08.odt
-		File: foo bar.odt		Result: foo bar 09.odt
+    	...
+    	File: foo bar.odt       Result: foo bar 30.odt
 
 example vi.
 =====
