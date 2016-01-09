@@ -16,7 +16,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.7.0 frenamer);
+my ($v,$progn)=qw(1.7.0Alpha frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -78,7 +78,7 @@ sub cmdlnParm(){	#display the program usage info
 	             Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	             Will replace all files, unless -f, -e, -tf, or -tst is set. 
 	-e=xxx       Filter target only files with file extension XXX
-	-tf=xxx      Filter target files by filesize that are at least X big. Example 1b, 10.24kb, 42.02MB, etc.
+	-tf=xxx      Filter target files by filesize that are at least X big. Example 24b, 10.24kb, 42.02MB, etc.
 	-tfu=xxx     Filter target by filesize unit only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
 	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
 	-[tu|td|tw]  Case translation: translate up, down, or uppercase the first letter for each word.
@@ -448,8 +448,8 @@ sub intoBytes($){ #Parameters: $"filesize+unitType" example 8.39GB, returns size
 #  zettabyte Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 #  yottabyte Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 
-  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB)/ ){ #floating point number & unit-type
-      my ($number, $type, $exp, $units) = (abs($1), $2, 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i ){ #floating point number & unit-type
+      my ($number, $type, $exp, $units) = (abs($1), _makeUC($2), 0, [qw(B KB MB GB TB PB EB ZB YB)]);
       return $number if $type eq "B";
       for (@$units){
           if ($type eq $units->[$exp]) {
@@ -507,7 +507,7 @@ sub showUsedOptions() {
 	 print "-->Ignore changing directory names\n" if($idir);
 	 print "-->Targeting only directory names\n" if($targetDirName);
 	 print "-->Targeting only filesize type $targetSizetype\n" if($targetSizetype);
-	 print "-->Targeting only files of at least size $targetFilesize -> " . intoBytes(uc $targetFilesize) ." bytes\n" if($targetFilesize);
+	 print "-->Targeting only files of at least size $targetFilesize -> " . intoBytes($targetFilesize) ." bytes\n" if($targetFilesize);
 	 print "-->Confirm changes\n" if($confirm);
 	 print "-->Force changes\n" if($force);
 	 print "-->Don't overwrite files\n" if($noForce);
@@ -572,8 +572,7 @@ sub prepData(){  # prep Data settings before the program does the real work.
        $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/);
    }
    if ($targetFilesize){
-       $targetFilesize = uc $targetFilesize;
-       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/) { $targetFilesize = "";}
+       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i) { $targetFilesize = "";}
        else { $targetFilesize = intoBytes($targetFilesize); } #only use this info comparing bytes so convert
    } 
    
