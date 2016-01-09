@@ -48,7 +48,12 @@ usage
     			Set -f for substitution: -f='s/bar/foo/'
     -ns		    Do not sanitize find and replace data. 
     			Note: this is turned off when -x mode is active.
-	-id		    Ignore changing directory names.	
+	-id		    Ignore changing directory names.
+	-tdn		Target directory names, only.
+	-tf=xxx		Filter target files by filesize that are at least X big. Example 1b, 10.24kb, or 42.02mb.
+	-tst=xxx	Filter target filesize type only. Choose one of these:
+    			[B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
+    			[TB]terabyte, [PB]petabyte, [EB]exabyte, [ZB]zettabyte, [YB]yottabyte.
 	-sa		    Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		    Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		    Add the last modified timestamp to the filename. 
@@ -57,9 +62,9 @@ usage
 	-rf=xxx		Completely replace filenames with this phrase & add incrementing number to it.
 				Only targets files within a folder.
 				Defaults to -sa but can -sp, option -r is disabled, and
-				will replace all files, unless -f or -e is set.
+				will replace all files, unless -f, -e, -tf, or -tst is set.
 	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
-	-e=xxx		Target to only files with file extension XXX
+	-e=xxx		Target only files with file extension XXX
     -silent	    Silent mode-- suppress all warnings, force all changes, and omit displaying results
     -help	    Usage options.
     -version    Version number.

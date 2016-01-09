@@ -7,17 +7,21 @@
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
 
+#new feature: target only folders        <-- -tdn
+#new feature: target by filesize      	 <--DONE  example -tf=200.32kb
+#new feature: target by filessize type   <--DONE  example -tst=mb
 use strict;
 use Getopt::Long;
 use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.6.2 frenamer);
+my ($v,$progn)=qw(1.7.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
-    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
-	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0);
+    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
+    $targetFilesize,$targetSizetype)
+	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","");
 
 
 GetOptions(
@@ -28,8 +32,9 @@ GetOptions(
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
-	   "rf=s" =>\$renameFile,        "sn:s" =>\$startCount,   "id"      =>\$idir,
-	   "ts"	  =>\$timeStamp);
+	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
+	   "ts"   =>\$timeStamp,         "tdn" =>\$targetDirName, "tst:s"   =>\$targetSizetype,
+	   "tf:s" =>\$targetFilesize);
 	    
 $SIG{INT} = \&sig_handler;
 
@@ -53,17 +58,17 @@ sub cmdlnParm(){	#display the program usage info
 	-d=/folder/path   Default "./" Directory to begin searching within.
 									
    optional:
+	-dr		Dry run test to see what will happen without committing changes to files.
+	-c		Confirm each file change before doing so.
 	-r		Recursively search the directory tree.
 	-fs		Follow symbolic links when recursive mode is on.
 	-v		Verbose: show settings and all files that will be changed.
-	-c		Confirm each file change before doing so.
-	-[tu|td|tw]	Case translation: translate up, down, or uppercase the first letter for each word.
 	-y		Force any changes without prompting: including overwriting a file.
 	-n		Do not overwrite any files, and do not ask.
 	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
-	-dr		Dry run test to see what will happen without committing changes to files.
 	-id		Ignore changing directory names.
+	-tdn	Target directory names, only.
 	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		Add the last modified timestamp to the filename. 
@@ -71,9 +76,12 @@ sub cmdlnParm(){	#display the program usage info
 			Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
 	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
-	        	Will replace all files, unless -f or -e is set. 
+	        	Will replace all files, unless -f, -e, -tf, or -tst is set. 
+	-tf=xxx		Filter target files by filesize that are at least X big. Example 1b, 10.24kb, 42.02MB, etc.
+	-tst=xxx	Filter target files by filesize type only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
 	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
-	-e=xxx		Target to only files with file extension XXX
+	-[tu|td|tw]	Case translation: translate up, down, or uppercase the first letter for each word.
+	-e=xxx		Target only files with file extension XXX
 	-silent		Silent mode-- suppress all warnings, force all changes, and omit displaying results
 	-help		Usage options.
 	-version	Version number.
@@ -128,7 +136,7 @@ sub ask($){
  my($msg) = @_; my $answer = "";
   
   print $msg;
-  until(($answer= <STDIN>)=~m/^(n|y|no|yes)/i){ print"$msg"; }
+  until(($answer=<STDIN>)=~m/^(n|y|no|yes)/i){ print"$msg"; }
 
  return $answer=~m/[y|yes]/i;# ? 1 : 0 	 bool value of T/F
 }#end ask($)
@@ -147,10 +155,10 @@ my ($file)=@_;
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
  my @per=("---","--x","-w-","-wx","r--","r-x","rw-","rwx");  #for decyphering file permission settings
 
-  if(-l $file){$file="l";}		#symbolic link?
-  elsif(-d $file){$file="d";}	#directory?
-  elsif(-c $file){$file="c";}	#special character file?
-  else{$file="-";}				#normal file
+  if(-l $file){$file="l";}      #symbolic link?
+  elsif(-d $file){$file="d";}   #directory?
+  elsif(-c $file){$file="c";}   #special character file?
+  else{$file="-";}              #normal file
  return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
@@ -295,14 +303,29 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
  return $fname;
 } #end _sequential($)
 
+sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize in bytes 
+# return's a list of (size, formatType), "size formatType"
+# source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
+ my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+
+  for (@$units) {
+      last if $size < 1024;
+      $size /= 1024;
+      $exp++;
+  }
+
+  return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
+} #end formatSize($)
+
 sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
  my ($dir)=@_; 
  my @files;
    return -1 if (! -d $dir); #skip path if not a valid directory name
    chdir ($dir);
-   opendir DLIST,"." or die "Cannot opendir: $!\n";    
-     eval { @files = readdir(DLIST) };
-   closedir DLIST;
+   if (opendir DLIST,"."){     
+      eval { @files = readdir(DLIST) };
+      closedir DLIST;
+   }else { die "Cannot opendir: $!\n"; }
    if ( $@ ){ #report any problems
 		  warn " >Problem reading $dir:\n >$@\n" if (!$silent); 
 		  return -1;
@@ -323,19 +346,25 @@ sub _unlock($) { #expects a filehandle reference to unlock a file
    until (flock($FH, LOCK_UN)){ sleep .10; }
 }#end _unlock($)
 
-sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
+sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
   my ($fname)=@_;
 
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
-   return if( $fname=~m/^(\.|\.\.)$/ or                          #if a dot file 
-             ($extension and $fname !~m/(\.$extension)$/) or     #if filter by extension is on, discard all non-matching filetypes
-             ($idir && -d $fname) or (-d $fname && $renameFile)  #if ignore changing folder-names
-            );                                                   #if yes to any, then move along
-   if (!(-w $fname)) {                                           #if not writable, then move along
-   		warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
-   		return;
+   #if true discard the filename, else keep it
+   return if( $fname=~m/^(\.|\.\.)$/ or                               #if a dot file 
+             ($extension and $fname !~m/(\.$extension)$/) or          #discard all non-matching filename extensions
+             ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
+            );                                                        #if yes to any, then move along
+   if (!(-w $fname)) {                                                #if not writable, then move along
+       warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
+       return;
    }
-
+   my $size=(stat($fname))[7];
+   return if ($targetFilesize and  $size < $targetFilesize );         #if filesize too small
+   my @sizeType=formatSize($size); undef $size;
+   return if ($targetSizetype and ($sizeType[1] ne $targetSizetype)); #filter out files that don't match size format type
+   #end discard filenames filter
+   
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
    if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
@@ -390,7 +419,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
 	    ++$fcount;
-	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
+	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
 	    return;
 	 }
 	 
@@ -405,7 +434,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 if ($@) { #where there any errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
 	 }elsif($verbose){
-	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
+	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
 	     ++$fcount;
 	 }else{++$fcount;}
 	 
@@ -413,12 +442,38 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
    
 } #end _rFRename($;$)
 
+sub intoBytes($){ #Parameters: $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
+ my ($size) =@_;
+#  byte      B
+#  kilobyte  K = 2**10 B = 1024 B
+#  megabyte  M = 2**20 B = 1024 * 1024 B
+#  gigabyte  G = 2**30 B = 1024 * 1024 * 1024 B
+#  terabyte  T = 2**40 B = 1024 * 1024 * 1024 * 1024 B
+#  petabyte  P = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
+#  exabyte   E = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  zettabyte Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  yottabyte Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+
+  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB)/ ){ #floating point number & unit-type
+      my ($number, $type, $exp, $units) = (abs($1), $2, 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+      return $number if $type eq "B";
+      for (@$units){
+          if ($type eq $units->[$exp]) {
+              foreach (1 .. $exp){ $number = $number * 1024;} #due to rounding errors, loop used instead of exponent 
+              return $number;
+          }
+          $exp++;
+      }
+  }
+  return "-1";
+}#end intoBytes($)
+
 sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter = string of data to untaint, flag
- 			#flag: >0 run through all filters, <=0 omit some filters
-   my ($flag,$s)= (pop @_, ""); ($_)=@_;
+ 	#flag: >0 run through all filters, <=0 omit some filters
+ my ($flag,$s)= (pop @_, ""); ($_)=@_;
 
    foreach (split //, $_) {		#tokenize and massage special characters
-	if (/^(\W)$/){
+	 if (/^(\W)$/){
 		if ($1 eq "("){ $_ =qw(\\\(); }
 		elsif ($1 eq ")"){ $_ =qw(\\\)); }
 		elsif ($1 eq "\^" && $flag){ $_ =qw(\\^); }
@@ -433,9 +488,9 @@ sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter 
 		elsif ($1 eq "\\"){ $_ ="\\" . "\\";}
 		elsif ($1 eq "/"){ $_ =qw(\\/);}
 		elsif ($1 eq "\!"&& $flag){ $_ =qw(\\!); }
-	}
-	$s.=$_;
-  }
+	 }
+	 $s.=$_;
+  }#end foreach
   return $s;
 }#end _untaintData($)
 
@@ -443,6 +498,7 @@ sub untaintData(){					#sanitize provided input data
    return if $noSanitize || $rx;	#don't treat regular expressions or when asked to turn sanitize mode off
    $matchString=_untaintData($matchString,1);
    $replaceMatchWith=_untaintData($replaceMatchWith,0);
+
 }#end untaintData()
 
 sub showUsedOptions() {
@@ -454,7 +510,10 @@ sub showUsedOptions() {
 	 print "-->Data sanitized { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$noSanitize;
 	 print "-->Start location: $startDir\n";
 	 print "-->Follow symbolic links\n" if($fs);
-	 print "-->Ignore changing directory names\n" if($idir);	 
+	 print "-->Ignore changing directory names\n" if($idir);
+	 print "-->Targeting only directory names\n" if($targetDirName);
+	 print "-->Targeting only filesize type $targetSizetype\n" if($targetSizetype);
+	 print "-->Targeting only files of at least size $targetFilesize -> " . intoBytes(uc $targetFilesize) ." bytes\n" if($targetFilesize);
 	 print "-->Confirm changes\n" if($confirm);
 	 print "-->Force changes\n" if($force);
 	 print "-->Don't overwrite files\n" if($noForce);
@@ -512,7 +571,18 @@ sub prepData(){  # prep Data settings before the program does the real work.
    if (($startCount=~/^[+]?\d+$/ and $startCount > 1) and ($sequentialAppend or $sequentialPrepend)){
        #if start-count is needed ensure the start-number is a positive integer
        $fcount = $startCount - 1; #account for 0 being the first number
-   }else { $startCount = 0; }   
+   }else { $startCount = 0; }
+
+   if ($targetSizetype){
+       $targetSizetype = uc $targetSizetype;
+       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/);
+   }
+   if ($targetFilesize){
+       $targetFilesize = uc $targetFilesize;
+       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/) { $targetFilesize = "";}
+       else { $targetFilesize = intoBytes($targetFilesize); } #only use this info comparing bytes so convert
+   } 
+   
 }#end prepData()
 
 sub main(){
@@ -521,7 +591,7 @@ sub main(){
                        (!$transU && !$transD && !$transWL && !$renameFile &&
                         !$timeStamp && !$sequentialAppend && !$sequentialPrepend))
                     );
-  
+
    prepData();
   
  #Everything is setup, now start looking for files to work with
