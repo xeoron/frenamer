@@ -602,7 +602,8 @@ sub showUsedOptions() {
 	 print "-->Recursively traverse folder tree\n" if ($rs);
 	 print "-->Dry run test\n" if($dryRun);
 	 print "-->Verbose option\n" if($verbose);
-	 print "-------------------------------------------------------\n Locations:\n";
+	 print "-"  x 55 . "\n";
+	  print "Locations:\n" if (!$duplicateFiles);
    }else { untaintData(); }
 }#end showUsedOptions()
 
