@@ -121,6 +121,12 @@ sub cmdlnParm(){	#display the program usage info
     		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
     		...
     		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
+
+    	In your music folder, do a dry run search for duplicate files that are of type mp3.
+    		frenamer -d=/var/music/ -dr -dup -e=mp3
+    		Possible duplicates: size 27.74 MB
+    		 [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
+    		 [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
    
     	Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them. 
     		$progn -r -tu -d=./images/ -f="nasa" -s="nasa"
