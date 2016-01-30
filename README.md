@@ -143,6 +143,19 @@ example v.
 example vi.
 =====
 
+   In your music folder, do a dry run search for duplicate files that are of type mp3.
+   
+    	frenamer -d=/var/music/ -dr -dup -e=mp3
+
+   What happens
+        
+        Possible duplicates: size 27.74 MB
+         [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
+         [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
+
+example vii.
+=====
+
    Uppercase all filenames in folder "Photos" and all subfolders contain the word "nasa" in them.
    
     	frenamer -r -tu -d=./Photos -f="nasa" -s="nasa"
@@ -151,7 +164,7 @@ example vi.
     	
     	File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
 
-example vii.
+example viii.
 =====
 
    Note about case translations: 
