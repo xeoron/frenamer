@@ -516,8 +516,9 @@ my @group = $finder -> findDuplicates();
   for my $group ( @group ) {
      print "Possible duplicates size: " . formatSize($group->[0]{size}) . "\n";
      for (1..$#$group) { print " [$_] $group->[$_]\n"; }
-     my $input ="";
      next if $dryRun;  #skip asking which files to keep and deleting duplicates 
+
+     my $input ="";
      if ($force){      #don't ask which files to keep, just use the 1st one.
         $input=1; 
      }else{
