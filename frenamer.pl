@@ -483,7 +483,7 @@ sub findDupelicateFiles(){
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #------------------------------------------------------------
-=pod
+=begin comment
 Note: The goal is to reduce file reading to a bare minimum. Say you have two 1 Gbyte files. 
 The size is exactly the same, but the files are very different. I wouldn't want to read 
 and digest both files to understand they are different, when it's enough to read a few 
@@ -506,6 +506,7 @@ $looper->next returns a new pair ( start, length ) within a given range, so that
 calls sample from different parts of the file. That's the "interlaced" part (which I should 
 maybe have called "interleaved", but hey! this side of the world it's not the best time 
 for choosing names in foreign languages).
+=end comment
 =cut
 
 my $finder = Finder -> new( $startDir );
