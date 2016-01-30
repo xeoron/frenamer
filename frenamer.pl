@@ -514,8 +514,8 @@ my @group = $finder -> findDuplicates();
 
 # Result printout and elaboration
   for my $group ( @group ) {
-     print "Possible duplicates size: " . formatSize($group->[0]{size}) . "\n";
-     for (1..$#$group) { print " [$_] $group->[$_]\n"; }
+     print "Possible duplicates: size " . formatSize($group->[0]{size}) . "\n";
+     for (1..$#$group) { print " [$_] " . getPerms($group->[$_]) . " " . $group->[$_] . "\n"; }
      next if $dryRun;  #skip asking which files to keep and deleting duplicates 
 
      my $input ="";
