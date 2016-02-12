@@ -122,7 +122,7 @@ example iv.
 
 example v.
 =====
-   In the current folder append a number count to all the files with a odt filetype and
+   In the current folder, append a number count to all the files with a odt filetype and
    have the count-number start at 8.
     	
     	frenamer -sa -sn=8 -e=odt
