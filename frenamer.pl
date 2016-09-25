@@ -1,23 +1,30 @@
 #!/usr/bin/perl -w
 =comment
- Author: Jason Campisi  	
+ Authors: Jason Campisi, and includes code by Antonio Bellezza
  Contact: aitsinformation at gmail.com
  Date: 9.29.2007 -> 2016
- License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html>
+ License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
+          findDupelicateFiles() & supporting code is GPL v2 
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
+
+#new feature: target only folders        <-- -tdn
+#new feature: target by filesize      	 <--DONE  example -tf=200.32kb
+#new feature: target by filessize type   <--DONE  example -tfu=mb
+#new feature: target duplicate files     <--DONE  example -dup 
 
 use strict;
 use Getopt::Long;
 use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
-use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.6.2 frenamer);
+my $DATE="2007->". (1900 + (localtime())[5]);
+my ($v,$progn)=qw(1.7.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
-    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp)
-	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0);
+    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
+    $targetFilesize,$targetSizetype, $duplicateFiles)
+	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","", 0);
 
 
 GetOptions(
@@ -28,8 +35,9 @@ GetOptions(
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
-	   "rf=s" =>\$renameFile,        "sn:s" =>\$startCount,   "id"      =>\$idir,
-	   "ts"	  =>\$timeStamp);
+	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
+	   "ts"   =>\$timeStamp,         "tdn"=>\$targetDirName,  "tfu:s"   =>\$targetSizetype,
+	   "tf:s" =>\$targetFilesize,    "dup"=>\$duplicateFiles);
 	    
 $SIG{INT} = \&sig_handler;
 
@@ -40,7 +48,7 @@ sub sig_handler{ 	#capture Ctrl+C signals
 }#end sig_handler
 
 sub cmdlnParm(){	#display the program usage info 
- if($version){ print "v$v ... by Jason Campisi ... Copyleft ". DATE . " Released under the the GPL v2 or higher\n";}
+ if($version){ print "v$v ... by Jason Campisi ... Copyleft $DATE Released under the the GPL v2 or higher\n";}
  else{  my $n=qw($1);	#use $n to overt throwing a concatenation error
  print <<EOD;
    
@@ -53,30 +61,35 @@ sub cmdlnParm(){	#display the program usage info
 	-d=/folder/path   Default "./" Directory to begin searching within.
 									
    optional:
-	-r		Recursively search the directory tree.
-	-fs		Follow symbolic links when recursive mode is on.
-	-v		Verbose: show settings and all files that will be changed.
-	-c		Confirm each file change before doing so.
-	-[tu|td|tw]	Case translation: translate up, down, or uppercase the first letter for each word.
-	-y		Force any changes without prompting: including overwriting a file.
-	-n		Do not overwrite any files, and do not ask.
-	-x		Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
-	-ns		Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
-	-dr		Dry run test to see what will happen without committing changes to files.
-	-id		Ignore changing directory names.
-	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
-	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
-	-ts		Add the last modified timestamp to the filename. 
-			This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
-			Timestamp is prepended by default, but you can -sa instead.
-	-rf=xxx		Completely replace filenames with this phrase & add a incrementing number to it.
-	        	Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
-	        	Will replace all files, unless -f or -e is set. 
-	-sn=xxx 	Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
-	-e=xxx		Target to only files with file extension XXX
-	-silent		Silent mode-- suppress all warnings, force all changes, and omit displaying results
-	-help		Usage options.
-	-version	Version number.
+	-dr     Dry run test to see what will happen without committing changes to files.
+	-c      Confirm each file change before doing so.
+	-r      Recursively search the directory tree.
+	-fs     Follow symbolic links when recursive mode is on.
+	-v      Verbose: show settings and all files that will be changed.
+	-y      Force any changes without prompting: including overwriting a file.
+	-n      Do not overwrite any files, and do not ask.
+	-x      Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
+	-ns     Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
+	-id     Filter: ignore changing directory names.
+	-tdn	Filter: target directory names, only.
+	-sa     Sequential append a number: Starting at 1 append the count number to a filename.
+	-sp     Sequential prepend a number: Starting at 1 prepend the count number to a filename.
+	-ts     Add the last modified timestamp to the filename. 
+	        This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
+	        Timestamp is prepended by default, but you can -sa instead.
+	-rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
+	             Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
+	             Will replace all files, unless -f, -e, -tf, or -tst is set. 
+	-e=xxx       Filter target only files with file extension XXX
+	-tf=xxx      Filter target files by filesize that are at least X big. Example 24b, 10.24kb, 42.02MB, etc.
+	-tfu=xxx     Filter target by filesize unit only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
+	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
+	-[tu|td|tw]  Case translation: translate up, down, or uppercase the first letter for each word.
+	-dup         Find & delete duplicate files at folder location.
+	             Supported: Dry run, target file by extension, and force removes all files, but the 1st.
+	-silent      Silent mode-- suppress all warnings, force all changes, and omit displaying results
+	-help        Usage options.
+	-version     Version number.
 
 
    Examples:
@@ -96,8 +109,8 @@ sub cmdlnParm(){	#display the program usage info
     		file: 01.boo bar.ogg      result: 01.Foo Bar.ogg
     		
     	In the current folder append a number count to all the files with a odt filetype and
-    	have the number count start at 8.
-    		$progn -sa -sn=8 -e=odt
+    	have the number count start at 8 for files 1MB or larger.
+    		$progn -tf="1mb" -sa -sn=8 -e=odt
     		file: foo.odt              result: foo 08.odt
     		...
     		file: foo bar.odt          result: foo bar 30.odt
@@ -108,6 +121,12 @@ sub cmdlnParm(){	#display the program usage info
     		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
     		...
     		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
+
+    	In your music folder, do a dry run search for duplicate files that are of type mp3.
+    		frenamer -d=/var/music/ -dr -dup -e=mp3
+    		Possible duplicates: size 27.74 MB
+    		 [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
+    		 [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
    
     	Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them. 
     		$progn -r -tu -d=./images/ -f="nasa" -s="nasa"
@@ -118,6 +137,9 @@ sub cmdlnParm(){	#display the program usage info
     	then "NASA" will be removed from the matched filename before the case is changed.
       		$progn -r -tu -d=./images/ -f="nasa"
        		file: nasa_launch.jpg     	result: _LAUNCH.JPG
+       		
+       		
+        Copyleft $DATE
 EOD
 }#end else
    exit;
@@ -128,15 +150,15 @@ sub ask($){
  my($msg) = @_; my $answer = "";
   
   print $msg;
-  until(($answer= <STDIN>)=~m/^(n|y|no|yes)/i){ print"$msg"; }
+  until(($answer=<STDIN>)=~m/^(n|y|no|yes)/i){ print"$msg"; }
 
  return $answer=~m/[y|yes]/i;# ? 1 : 0 	 bool value of T/F
 }#end ask($)
 
-sub confirmChange($$){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
+sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
-  my ($currentf, $newf)=@_;  
-  my $msg=" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
+  my ($currentf, $newf, @sizeType)=@_;  
+  my $msg=" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
 
   return ask($msg);
 }#end confirmChage($)
@@ -147,10 +169,10 @@ my ($file)=@_;
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
  my @per=("---","--x","-w-","-wx","r--","r-x","rw-","rwx");  #for decyphering file permission settings
 
-  if(-l $file){$file="l";}		#symbolic link?
-  elsif(-d $file){$file="d";}	#directory?
-  elsif(-c $file){$file="c";}	#special character file?
-  else{$file="-";}				#normal file
+  if(-l $file){$file="l";}      #symbolic link?
+  elsif(-d $file){$file="d";}   #directory?
+  elsif(-c $file){$file="c";}   #special character file?
+  else{$file="-";}              #normal file
  return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
@@ -180,7 +202,6 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 
 #/* treat underscores as word boundries, also make file extensions lowercase */
  if ($_=~m/\_/){
-   #print "before underscore filter: $_\n";
    my @n; my $string="";
    if (@n=split /\_/, $_){ #split name into sections denoted by the '_' sybmol used in the name
         for ( my $c=0; $c <=$#n;  $c++){
@@ -192,7 +213,6 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
              }else { $string = $string . "_" . $n[$c]; }        #all other cases
         }
    }
-   #print "after underscore filter: $_\n";
  }
 
 #/* deal with dot files and file extensions  */
@@ -208,16 +228,12 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
 	     }else { $string = $string . "." . $n[$c]; }        	#all other cases
 	}
    }
-
-   if( $_=~m/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/ ){ #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
-      #print "$1 | 1: $1, 2: $2\n";
-       $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$MAKELOWER->(".$1.$2")/e; 
-      #note: need e option for having the method call to work, & can only handle 1 method-call
-   	  #print "$2 | 1: $1, 2: $2\n"; exit;
-   }
- }
+   
+   #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
+   #note: need e option for having the method call to work, & can only handle 1 method-call
+   $_=~s/\.([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$/$MAKELOWER->(".$1.$2")/e; 
+ }#end elsif
  
- #print "after: $_\n";
  return $_;
 } #end _translateWL($)
 
@@ -295,14 +311,29 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
  return $fname;
 } #end _sequential($)
 
+sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize in bytes 
+# return's a list of (size, formatType), "size formatType"
+# source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
+ my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+
+  for (@$units) {
+      last if $size < 1024;
+      $size /= 1024;
+      $exp++;
+  }
+
+  return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
+} #end formatSize($)
+
 sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
  my ($dir)=@_; 
  my @files;
    return -1 if (! -d $dir); #skip path if not a valid directory name
    chdir ($dir);
-   opendir DLIST,"." or die "Cannot opendir: $!\n";    
-     eval { @files = readdir(DLIST) };
-   closedir DLIST;
+   if (opendir DLIST,"."){     
+      eval { @files = readdir(DLIST) };
+      closedir DLIST;
+   }else { die "Cannot opendir: $!\n"; }
    if ( $@ ){ #report any problems
 		  warn " >Problem reading $dir:\n >$@\n" if (!$silent); 
 		  return -1;
@@ -323,19 +354,25 @@ sub _unlock($) { #expects a filehandle reference to unlock a file
    until (flock($FH, LOCK_UN)){ sleep .10; }
 }#end _unlock($)
 
-sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
+sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
   my ($fname)=@_;
 
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
-   return if( $fname=~m/^(\.|\.\.)$/ or                          #if a dot file 
-             ($extension and $fname !~m/(\.$extension)$/) or     #if filter by extension is on, discard all non-matching filetypes
-             ($idir && -d $fname) or (-d $fname && $renameFile)  #if ignore changing folder-names
-            );                                                   #if yes to any, then move along
-   if (!(-w $fname)) {                                           #if not writable, then move along
-   		warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
-   		return;
+   #if true discard the filename, else keep it
+   return if( $fname=~m/^(\.|\.\.)$/ or                               #if a dot file 
+             ($extension and $fname !~m/(\.$extension)$/) or          #discard all non-matching filename extensions
+             ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
+            );                                                        #if yes to any, then move along
+   if (!(-w $fname)) {                                                #if not writable, then move along
+       warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
+       return;
    }
-
+   my $size=(stat($fname))[7];
+   return if ($targetFilesize and  $size < $targetFilesize );         #if filesize too small
+   my @sizeType=formatSize($size); undef $size;
+   return if ($targetSizetype and ($sizeType[1] ne $targetSizetype)); #filter out files that don't match size format type
+   #end discard filenames filter
+   
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
    if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
@@ -348,7 +385,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
  	 	return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
  	 	$fname = $r;
  	 }
- 	 elsif ($rx){
+ 	 elsif($rx){
 		#using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
 		$_=$fname if !$rs;
 		eval $matchString;
@@ -385,12 +422,12 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 			 print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
 		}
 
-		if(!confirmChange($fold,$fname)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
+		if(!confirmChange($fold,$fname,@sizeType)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
 	    ++$fcount;
-	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
+	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
 	    return;
 	 }
 	 
@@ -405,7 +442,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
 	 if ($@) { #where there any errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
 	 }elsif($verbose){
-	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
+	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
 	     ++$fcount;
 	 }else{++$fcount;}
 	 
@@ -413,12 +450,110 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $file
    
 } #end _rFRename($;$)
 
+sub intoBytes($){ #Parameters: $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
+ my ($size) =@_;
+#  byte      B
+#  kilobyte  K = 2**10 B = 1024 B
+#  megabyte  M = 2**20 B = 1024 * 1024 B
+#  gigabyte  G = 2**30 B = 1024 * 1024 * 1024 B
+#  terabyte  T = 2**40 B = 1024 * 1024 * 1024 * 1024 B
+#  petabyte  P = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
+#  exabyte   E = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  zettabyte Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  yottabyte Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+
+  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i ){ #floating point number & unit-type
+      my ($number, $type, $exp, $units) = (abs($1), _makeUC($2), 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+      return $number if $type eq "B";
+      for (@$units){
+          if ($type eq $units->[$exp]) {
+              foreach (1 .. $exp){ $number = $number * 1024;} #due to rounding errors, loop used instead of exponent 
+              return $number;
+          }
+          $exp++;
+      }
+  }
+  return -1;
+}#end intoBytes($)
+
+sub findDupelicateFiles(){
+#------------------------------------------------------------
+# Based off of dupfinder v1: find duplicate files 
+# Source: http://www.perlmonks.org/?node_id=224748
+#------------------------------------------------------------
+# Copyright Antonio Bellezza 2003
+# mail: antonio@beautylabs.net
+#------------------------------------------------------------
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License
+# as published by the Free Software Foundation;
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#------------------------------------------------------------
+=begin comment
+Note: The goal is to reduce file reading to a bare minimum. Say you have two 1 Gbyte files. 
+The size is exactly the same, but the files are very different. I wouldn't want to read 
+and digest both files to understand they are different, when it's enough to read a few 
+bytes in the same position. This code deals rather well with these cases. It starts by 
+reading a small chunk from all files of the same size and uses that chunk as key to 
+partition the group of files. If any subset contains more than one file, then read 
+another chunk starting from another (preferably far) position and iterate.
+
+It's more or less like the naif "real life" way of comparing things. If you have two books 
+with a blank cover, to check if they are different you first compare the size. If it's the 
+same, you open the same page from both and check if they differ. Only if the books are the 
+same you need to keep on reading until the end.
+
+Moreover, by using byte by byte comparison instead of hashing, you don't even risk false 
+positives. As small as the risk may be, it will most surely happen for your presentation 
+due tomorrow.
+
+Package Finder::Looper takes care of the iteration. Each call to 
+$looper->next returns a new pair ( start, length ) within a given range, so that consecutive 
+calls sample from different parts of the file. That's the "interlaced" part (which I should 
+maybe have called "interleaved", but hey! this side of the world it's not the best time 
+for choosing names in foreign languages).
+=end comment
+=cut
+
+my $finder = Finder -> new( $startDir );
+my @group = $finder -> findDuplicates();
+
+# Result printout and elaboration
+  for my $group ( @group ) {
+     print "Possible duplicates: size " . formatSize($group->[0]{size}) . "\n";
+     for (1..$#$group) { print " [$_] " . getPerms($group->[$_]) . " " . $group->[$_] . "\n"; }
+     next if $dryRun;  #skip asking which files to keep and deleting duplicates 
+
+     my $input ="";
+     if ($force){      #don't ask which files to keep, just use the 1st one.
+        $input=1; 
+     }else{
+        print "Action: [] continue or [1-$#$group] keep corresponding file and remove the rest\n";
+        $input = <STDIN>;
+        chomp $input;
+        next if $input eq '';
+     }
+     if ($input =~ m|([0-9]+)| && $1 > 0 && $1 <= $#$group) {
+        for (0..($1-1), ($1+1)..$#$group) {
+           my $delendum = $group -> [$_];
+           print "Unlinking $delendum: ";
+           unlink $delendum;
+           print " --> done\n";
+        }
+     }
+     print "\n";
+  }
+}#end findDupelicateFiles()
+
 sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter = string of data to untaint, flag
- 			#flag: >0 run through all filters, <=0 omit some filters
-   my ($flag,$s)= (pop @_, ""); ($_)=@_;
+ 	#flag: >0 run through all filters, <=0 omit some filters
+ my ($flag,$s)= (pop @_, ""); ($_)=@_;
 
    foreach (split //, $_) {		#tokenize and massage special characters
-	if (/^(\W)$/){
+	 if (/^(\W)$/){
 		if ($1 eq "("){ $_ =qw(\\\(); }
 		elsif ($1 eq ")"){ $_ =qw(\\\)); }
 		elsif ($1 eq "\^" && $flag){ $_ =qw(\\^); }
@@ -433,9 +568,9 @@ sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter 
 		elsif ($1 eq "\\"){ $_ ="\\" . "\\";}
 		elsif ($1 eq "/"){ $_ =qw(\\/);}
 		elsif ($1 eq "\!"&& $flag){ $_ =qw(\\!); }
-	}
-	$s.=$_;
-  }
+	 }
+	 $s.=$_;
+  }#end foreach
   return $s;
 }#end _untaintData($)
 
@@ -443,6 +578,7 @@ sub untaintData(){					#sanitize provided input data
    return if $noSanitize || $rx;	#don't treat regular expressions or when asked to turn sanitize mode off
    $matchString=_untaintData($matchString,1);
    $replaceMatchWith=_untaintData($replaceMatchWith,0);
+
 }#end untaintData()
 
 sub showUsedOptions() {
@@ -454,7 +590,10 @@ sub showUsedOptions() {
 	 print "-->Data sanitized { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$noSanitize;
 	 print "-->Start location: $startDir\n";
 	 print "-->Follow symbolic links\n" if($fs);
-	 print "-->Ignore changing directory names\n" if($idir);	 
+	 print "-->Ignore changing directory names\n" if($idir);
+	 print "-->Targeting only directory names\n" if($targetDirName);
+	 print "-->Targeting only filesize type $targetSizetype\n" if($targetSizetype);
+	 print "-->Targeting only files of at least size $targetFilesize -> " . intoBytes($targetFilesize) ." bytes\n" if($targetFilesize);
 	 print "-->Confirm changes\n" if($confirm);
 	 print "-->Force changes\n" if($force);
 	 print "-->Don't overwrite files\n" if($noForce);
@@ -466,12 +605,14 @@ sub showUsedOptions() {
 	 print "-->Sequential file count: append number to file name\n" if($sequentialAppend);
 	 print "-->Sequential file count: prepend number to file name\n" if($sequentialPrepend);
  	 print "-->Timestamp in name\n" if ($timeStamp);
+ 	 print "-->Find Duplicate files\n" if ($duplicateFiles);
 	 print "-->Name all files as $renameFile\n" if($renameFile);
  	 print "-->Start count=$startCount\n" if ($startCount);
 	 print "-->Recursively traverse folder tree\n" if ($rs);
 	 print "-->Dry run test\n" if($dryRun);
 	 print "-->Verbose option\n" if($verbose);
-	 print "-------------------------------------------------------\n Locations:\n";
+	 print "-"  x 55 . "\n";
+	 print "Locations:\n" if (!$duplicateFiles);
    }else { untaintData(); }
 }#end showUsedOptions()
 
@@ -487,6 +628,8 @@ sub prepData(){  # prep Data settings before the program does the real work.
    }
 
    showUsedOptions();
+   
+   return if ($duplicateFiles); #if true nothing to prep
    
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
        if (($sequentialAppend eq 0 && $sequentialPrepend eq 0) or
@@ -512,20 +655,34 @@ sub prepData(){  # prep Data settings before the program does the real work.
    if (($startCount=~/^[+]?\d+$/ and $startCount > 1) and ($sequentialAppend or $sequentialPrepend)){
        #if start-count is needed ensure the start-number is a positive integer
        $fcount = $startCount - 1; #account for 0 being the first number
-   }else { $startCount = 0; }   
+   }else { $startCount = 0; }
+
+   if ($targetSizetype){
+       $targetSizetype = uc $targetSizetype;
+       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/);
+   }
+   if ($targetFilesize){
+       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i) { $targetFilesize = "";}
+       else { $targetFilesize = intoBytes($targetFilesize); } #only use this info comparing bytes so convert
+   } 
+   
 }#end prepData()
 
 sub main(){
   #Setup settings and messages
    cmdlnParm() 	    if ($version || $help || ($matchString eq "" && 
                        (!$transU && !$transD && !$transWL && !$renameFile &&
-                        !$timeStamp && !$sequentialAppend && !$sequentialPrepend))
+                        !$timeStamp && !$sequentialAppend && !$sequentialPrepend &&
+                        !$duplicateFiles))
                     );
-  
+
    prepData();
   
  #Everything is setup, now start looking for files to work with
-   if ($rs){ #recursively traverse the filesystem?
+   if ($duplicateFiles){
+      findDupelicateFiles();
+      return;
+   }elsif ($rs){ #recursively traverse the filesystem?
        if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links?
        else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
@@ -544,6 +701,392 @@ sub main(){
 }#end main()
 
 main();		#run the code
+	
+	
+#------------------------------------------------------------
+# Below are the supporting parts of findDupelicateFiles() aka dubFinder.pl 
+# Copyright Antonio Bellezza 2003 GPL2 
+# readDirs($) modified by Jason Campisi 2016
+#------------------------------------------------------------
+package Finder;
+
+#------------------------------------------------------------
+# A finder is implemented as a hash
+# $finder -> {groups} is the array of groups of possibly
+# equal files
+# Each group is an array whose first element is a hash
+# with the various key attributes.
+# Subsequent elements are the filenames in the group
+# Example:
+# [
+#   [ { size=>0 }, 'empty.txt', 'null.dat', 'nothing_here' ],
+#   [ { size=>1321, hash12=>'xyz' }, 'myfile.a', 'myfile.b' ],
+#   [ { size=>1321, hash12=>'wtt' }, 'myfile.c', 'myfile.d' ]
+# ]
+#------------------------------------------------------------
+
+use strict;
+use IO::File;
+use File::Find;
+
+use constant MINREADSIZE => 1024;
+use constant MAXREADSIZE => 1024 * 1024;
+use constant BLOCK   => 4096;
+
+our $handles = {};
+
+
+#----------------------------------------
+# new ( dir, ... )
+# Create new finder
+#----------------------------------------
+sub new {
+  my $class = shift;
+  my $self = {
+    dirs     => [ @_ ],
+    groups   => [],
+    terminal => []
+  };
+  return bless $self, $class;
+}
+
+#----------------------------------------
+# readDirs ()
+# Find all files and setup finder
+#----------------------------------------
+sub readDirs {
+  my $self = shift;
+  if ($extension){ # Seek out filenames with fileType X, only
+     my @group;
+     my $newGroup=[{}];
+     find( sub { -f && ( push @group, $File::Find::name ) }, @{$self->{dirs}} );
+     foreach (@group){ push @$newGroup, $_ if $_ =~m/\.$extension$/; }
+     $self -> {groups} = [ $newGroup ];
+  } else { #grab all filenames
+     my $group=[{}];
+     find( sub { -f && ( push @$group, $File::Find::name ) }, @{$self->{dirs}} );
+     $self -> {groups} = [ $group ];
+  }  
+    
+}#end readDirs
+
+
+#----------------------------------------
+# findDuplicates()
+# Return list of terminal groups
+#----------------------------------------
+sub findDuplicates {
+    my $self = shift;
+    my $hasher;
+    $self -> readDirs();
+
+#    print $self -> status;
+
+    $hasher = { process  => \&size,
+        name     => 'size',
+        terminal => sub { shift==0 } };
+
+    $self -> {groups} = [ $self -> partition( $self -> {groups} [0], $hasher ) ];
+
+#    print $self -> status;
+
+    $self -> prune();
+
+#    print $self -> status;
+
+  for( @{$self -> {groups}} ) {
+     my @processList = ( $_ );
+     my $size = $_ ->[0]{size};
+     my $iterator = Finder::Looper -> new( $size );
+
+     while ( @processList and my ( $start, $length ) = $iterator -> next() ) {
+          $hasher = { process => \&sample,
+                    args => [ $start, $length ] };
+          my @newList = ();
+          for (@processList) {
+              my @subgroup = ( $self -> partition( $_, $hasher ) );
+              $self -> prune( \@subgroup );
+              push @newList, @subgroup;
+          }
+          @processList = @newList;
+     }
+     closeHandles( @processList );
+     $self -> addTerminal( @processList );
+     
+  }
+  return @{ $self -> {terminal} };
+}#end findDuplicates
+
+
+
+#----------------------------------------
+# prune ()
+# prune ( \@group )
+# Remove groups only containing one file
+# If argument is omitted, remove from $self -> {groups}
+# Add to terminal groups with terminal key
+# Return number of remaining groups
+#----------------------------------------
+sub prune {
+ my $self = shift;
+ my $src = $_[0] || $self -> {groups};
+ my $counter = 0;
+ 
+  for ( my $i = $#$src; $i>=0; $i--) {
+        my $group = $src -> [$i];
+        if ( $group -> [0] {terminal} ) {
+            # Remove and add to terminal groups
+            $self -> addTerminal( $group );
+            closeHandles( $group );
+            splice @$src, $i, 1;
+        } elsif ( $#$group > 1 ) {
+            # Keep in place
+            $counter ++;
+        } else {
+            # Drop group only containing one file
+            closeHandles( $group );
+            splice @$src, $i, 1;
+        }
+  }
+    return $counter;
+}
+
+
+#----------------------------------------
+# partition( $group, hasher [, hasher par, ... ] )
+# Execute a discriminatory step and create subgroups
+# Return list of groups
+# A hasher is a hash ref of type
+# {
+#    process  => sub { taking fileName as first arg, key as second argument },
+#    name     => hash-key name / undef if not added,
+#    terminal => sub { shift is a terminal key or not },
+#    args     => [ extra arguments to pass ]
+# }
+#----------------------------------------
+sub partition {
+    my $self = shift;
+    my ($group, $hasher, @hasherPar) = @_;
+
+    my $key = shift @{$group};
+    my %bucket = ();
+
+  for (@{$group}) {
+     my $hash = $hasher -> {process} -> ($_, $key,
+                        @{ $hasher -> {args} || [] },
+                        @hasherPar);
+     push @{ $bucket {$hash} ||= [] }, $_;
+  }
+
+  my @result = ();
+
+  for (keys %bucket) {
+    # Create a clone of the key
+     my $newKey = { %$key };
+     $newKey -> { $hasher -> {name} } = $_ if $hasher -> {name};
+     $newKey -> {terminal} = 1
+     if ( $hasher -> {terminal} && $hasher -> {terminal} -> ($_) );
+     push @result, [ $newKey, @{$bucket {$_}} ];
+  }
+
+    return @result;
+}
+
+
+#----------------------------------------
+# status()
+# Return string showing finder status
+#----------------------------------------
+sub status {
+  my $self = shift;
+  my $res = 'Groups:';
+   for (grep {$_ > 0} map {$#$_} @{$self -> {groups}}) { $res .= " $_"; }
+
+   $res .= "\nTerminal:";
+   for (grep {$_ > 0} map {$#$_} @{$self -> {terminal}}) { $res .= " $_"; }
+   $res .= "\n";
+  return $res;
+}
+
+
+#----------------------------------------
+# function
+#----------------------------------------
+# fileHandle( filename )
+# return fileHandle or undef
+#----------------------------------------
+sub fileHandle {
+  my ($fileName) = @_;
+    
+  unless ($handles -> {$fileName}) {
+    my $handle = IO::File -> new();
+    $handle -> open("<$fileName") || return undef;
+    $handles -> {$fileName} = $handle;
+  }
+  return $handles -> {$fileName};
+}
+
+#----------------------------------------
+# function
+#----------------------------------------
+# closeHandle( filename )
+# close handle
+#----------------------------------------
+sub closeHandle {
+    my ($fname) = @_;
+    delete $handles -> {$fname};
+}
+
+#----------------------------------------
+# function
+#----------------------------------------
+# closeHandles( $group, ... )
+# Close handles of filenames contained in group
+#----------------------------------------
+sub closeHandles {
+  for my $group (@_) {
+     for (1..$#$group) {
+        closeHandle( $group -> [$_] );
+     }
+  }
+}
+
+#----------------------------------------
+# addTerminal( \@file, ... )
+# Add to terminal sets arrays of files with given size
+#----------------------------------------
+sub addTerminal {
+    my $self = shift;
+    push @{ $self -> {terminal} }, @_;
+}
+
+{
+    my $error = 0;
+
+#----------------------------------------
+# sample ( filename, key [, start [, length ] ] )
+#----------------------------------------
+ sub sample {
+    my ($fname, $key, $start, $length) = @_;
+    $start ||= 0;
+
+    my $res;
+
+    # Return a consecutive error code if unable to open file
+    my $handle = fileHandle( $fname ) || return "Error " . $error++;
+    $handle -> seek( $start, 0 );
+
+    if ($length) {
+        $handle -> read( $res, $length );
+    }else {
+       $res = '';
+       my $buffer;
+       while ( $handle -> read( $buffer, BLOCK ) ) { $res .= $buffer; }
+    }
+    return $res;
+ }
+}
+
+
+#----------------------------------------
+# size ( filename )
+# Find file size
+#----------------------------------------
+sub size {
+    my $fname = shift;
+    return (stat ($_))[7];
+}
+
+
+#------------------------------------------------------------
+# Finder::Looper
+#------------------------------------------------------------
+# Iterator providing starting points and lengths
+# for interlaced reads
+#------------------------------------------------------------
+package Finder::Looper;
+
+use constant MINREADSIZE => Finder::MINREADSIZE;
+use constant MAXREADSIZE => Finder::MAXREADSIZE;
+use constant BLOCK       => Finder::BLOCK;
+
+
+#----------------------------------------
+# new( size [, minsize [, maxsize ]] )
+#----------------------------------------
+sub new {
+ my $class = shift;
+ my ( $size, $minsize, $maxsize ) = @_;
+  $minsize ||= MINREADSIZE;
+  $maxsize ||= MAXREADSIZE;
+  bless {
+    size     => $size,
+    minsize  => $minsize || MINREADSIZE,
+    maxsize  => $maxsize || MAXREADSIZE,
+    readsize => $minsize || MINREADSIZE,
+    oldsize  => 0,
+    i        => 0,
+    gap      => 1 << nextLog2( $size )
+  }, $class;
+}
+
+#----------------------------------------
+# next()
+# return ( start, length )
+# return () if the iteration is over
+#----------------------------------------
+
+sub next {
+  my $self = shift;
+
+  # Return EOL if the gap has become smaller than the size
+  # unless it's the first iteration ( oldsize = 0 )
+  if ( $self -> {readsize} > $self -> {gap} && $self -> {oldsize} > 0 ) {
+    return ();
+  }
+    
+  if ( $self -> {i} * $self -> {gap} >= $self -> {size} ) {
+    $self -> {i} = 0;
+    $self -> {oldsize} = $self -> {readsize};
+    $self -> {gap} >>= 1;
+    $self -> {readsize} <<= 1
+        if ( $self -> {readsize} < $self -> {gap}
+         && $self -> {readsize} < $self -> {maxsize} );
+  }
+
+  my $offset = ( $self -> {i} % 2 ) ? 0 : $self -> {oldsize};
+    
+  my $start  = $self -> {i} * $self -> {gap} + $offset;
+  my $length = $self -> {readsize} - $offset;
+  $length    = $self -> {size} - $start if $start + $length > $self->{size};
+
+  $self -> {i} ++;
+
+  if ( $length <= 0 ) {
+    return $self -> next();
+  } else {
+    return ( $start, $length );
+  } 
+}
+
+#----------------------------------------
+# function
+#----------------------------------------
+# nextLog2( positive integer )
+# return exponent of nearest power of 2
+# not less than integer
+# Warning: returns at most the biggest power of
+# two expressed by an integer
+#----------------------------------------
+sub nextLog2 {
+  my ($i, $pow, $exp) = (shift, 1, 0);
+
+  while ( $pow < $i && $pow > 0 ) {
+    $pow <<= 1;
+    $exp++;
+  }
+  return $exp;
+}	
 	
 
 __END__
