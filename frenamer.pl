@@ -18,8 +18,8 @@ use Getopt::Long;
 use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
-use constant DATE=>qw(2007->2016);
-my ($v,$progn)=qw(1.7.0Alpha frenamer);
+my $DATE="2007->". (1900 + (localtime())[5]);
+my ($v,$progn)=qw(1.7.1 Beta frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -48,7 +48,7 @@ sub sig_handler{ 	#capture Ctrl+C signals
 }#end sig_handler
 
 sub cmdlnParm(){	#display the program usage info 
- if($version){ print "v$v ... by Jason Campisi ... Copyleft ". DATE . " Released under the the GPL v2 or higher\n";}
+ if($version){ print "v$v ... by Jason Campisi ... Copyleft $DATE Released under the the GPL v2 or higher\n";}
  else{  my $n=qw($1);	#use $n to overt throwing a concatenation error
  print <<EOD;
    
@@ -137,6 +137,9 @@ sub cmdlnParm(){	#display the program usage info
     	then "NASA" will be removed from the matched filename before the case is changed.
       		$progn -r -tu -d=./images/ -f="nasa"
        		file: nasa_launch.jpg     	result: _LAUNCH.JPG
+       		
+       		
+        Copyleft $DATE
 EOD
 }#end else
    exit;
@@ -493,7 +496,7 @@ sub findDupelicateFiles(){
 Note: The goal is to reduce file reading to a bare minimum. Say you have two 1 Gbyte files. 
 The size is exactly the same, but the files are very different. I wouldn't want to read 
 and digest both files to understand they are different, when it's enough to read a few 
-bytes in the same position. My program deals rather well with these cases. It starts by 
+bytes in the same position. This code deals rather well with these cases. It starts by 
 reading a small chunk from all files of the same size and uses that chunk as key to 
 partition the group of files. If any subset contains more than one file, then read 
 another chunk starting from another (preferably far) position and iterate.
@@ -609,7 +612,7 @@ sub showUsedOptions() {
 	 print "-->Dry run test\n" if($dryRun);
 	 print "-->Verbose option\n" if($verbose);
 	 print "-"  x 55 . "\n";
-	  print "Locations:\n" if (!$duplicateFiles);
+	 print "Locations:\n" if (!$duplicateFiles);
    }else { untaintData(); }
 }#end showUsedOptions()
 

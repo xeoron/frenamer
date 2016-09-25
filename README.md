@@ -149,7 +149,7 @@ example vi.
 
    What happens
         
-        Possible duplicates: size 27.74 MB
+        Possible duplicates: size 8.74 MB
          [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
          [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
 
