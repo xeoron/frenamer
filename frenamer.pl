@@ -16,7 +16,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.7.2 frenamer);
+my ($v,$progn)=qw(1.7.3 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -131,7 +131,7 @@ sub cmdlnParm(){	#display the program usage info
     		
     	Note about case translations: 
     	If the substitute option (-s) is omitted when the find option (-f) is being used, 
-    	then "NASA" will be removed from the matched filename before the case is changed.
+    	then the -f keyword will be removed from the matched filename before the case is changed.
       		$progn -r -tu -d=./images/ -f="nasa"
        		file: nasa_launch.jpg     	result: _LAUNCH.JPG
        		
@@ -155,9 +155,8 @@ sub ask($){
 sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
   my ($currentf, $newf, @sizeType)=@_;  
-  my $msg=" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ";
-
-  return ask($msg);
+  
+  return ask(" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ");
 }#end confirmChage($)
 
 sub getPerms($){ 	#get file permisions in *nix format. Parameter=$file to lookup
