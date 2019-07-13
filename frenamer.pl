@@ -2,16 +2,13 @@
 =comment
  Authors: Jason Campisi, and includes code by Antonio Bellezza
  Contact: aitsinformation at gmail.com
- Date: 9.29.2007 -> 2016
+ Date: 9.29.2007 -> 2019
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
 
 #new feature: target only folders        <-- -tdn
-#new feature: target by filesize      	 <--DONE  example -tf=200.32kb
-#new feature: target by filessize type   <--DONE  example -tfu=mb
-#new feature: target duplicate files     <--DONE  example -dup 
 
 use strict;
 use Getopt::Long;
@@ -19,7 +16,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.7.1 frenamer);
+my ($v,$progn)=qw(1.7.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -531,7 +528,7 @@ my @group = $finder -> findDuplicates();
      if ($force){      #don't ask which files to keep, just use the 1st one.
         $input=1; 
      }else{
-        print "Action: [] continue or [1-$#$group] keep corresponding file and remove the rest\n";
+        print "Action: Press [Return] to skip or choose one file to keep [1-$#$group]\n";
         $input = <STDIN>;
         chomp $input;
         next if $input eq '';
