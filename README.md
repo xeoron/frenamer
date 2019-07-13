@@ -45,7 +45,7 @@ usage
     -y		Force any changes without prompting-- including overwriting a file.
     -n		Do not overwrite any files, and do not ask.
     -x		Toggle on user defined regular expression mode. 
-    				Set -f for substitution: -f='s/bar/foo/'
+    			Set -f for substitution: -f='s/bar/foo/'
     -ns		Do not sanitize find and replace data. 
     			Note: this is turned off when -x mode is active.
 	-id		Filter: Ignore changing directory names.
