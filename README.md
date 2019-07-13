@@ -81,17 +81,17 @@ example i.
 
    What happens: the program is run 2 times
         
-        Run 1 targets all jpg files
-   		File: 2345234.jpg		Result: 01 Vacation.jpg
-   		File: 2345235.jpg		Result: 02 Vacation.jpg
-   		...
-   		File: 2345269.jpg		Result: 35 Vacation.jpg
+    Run 1 targets all jpg files
+   	  File: 2345234.jpg		Result: 01 Vacation.jpg
+   	  File: 2345235.jpg		Result: 02 Vacation.jpg
+   	  ...
+   	  File: 2345269.jpg		Result: 35 Vacation.jpg
    		
-   		Run 2 targets jpg files with "Vacation" in the filename
-   		File: 01 Vacation.jpg	Result: 01 Vacation 2013-06-14 19:28:53.jpg
-   		File: 02 Vacation.jpg	Result: 02 Vacation 2013-06-14 19:30:00.jpg
-   		...
-   		File: 35 Vacation.jpg	Result: 35 Vacation 2013-06-15 8:14:53.jpg
+   	Run 2 targets jpg files with "Vacation" in the filename
+   	  File: 01 Vacation.jpg	Result: 01 Vacation 2013-06-14 19:28:53.jpg
+   	  File: 02 Vacation.jpg	Result: 02 Vacation 2013-06-14 19:30:00.jpg
+   	  ...
+   	  File: 35 Vacation.jpg	Result: 35 Vacation 2013-06-15 8:14:53.jpg
 	
 example ii.
 =====
