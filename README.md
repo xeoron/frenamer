@@ -170,7 +170,7 @@ example viii.
 
    Note about case translations: 
    If the substitute option (-s) is omitted when find option (-f) is being used, 
-   then it will search for any file with the phrase "nasa" & remove it from filename 
+   then it will search for any file with the -f keyword & remove it from filename 
    before the case is changed.
    
     frenamer -r -tu -d=./images/ -f="nasa"
