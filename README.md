@@ -36,37 +36,37 @@ usage
     
    Options
    
-    -dr		    Dry run test to see what will happen without committing changes to files.
-    -r		    Recursively search the directory tree.
-    -fs		    Follow symbolic links when recursive mode is on.
-    -v		    Verbose-- show settings and all files that will be changed.
-    -c		    Confirm each file change before doing so.
+    -dr		Dry run test to see what will happen without committing changes to files.
+    -r		Recursively search the directory tree.
+    -fs		Follow symbolic links when recursive mode is on.
+    -v		Verbose-- show settings and all files that will be changed.
+    -c		Confirm each file change before doing so.
     -[tu|td|tw]	Case translation-- translate up, down, or uppercase the first letter for each word.
-    -y			Force any changes without prompting-- including overwriting a file.
-    -n			Do not overwrite any files, and do not ask.
-    -x			Toggle on user defined regular expression mode. 
+    -y		Force any changes without prompting-- including overwriting a file.
+    -n		Do not overwrite any files, and do not ask.
+    -x		Toggle on user defined regular expression mode. 
     				Set -f for substitution: -f='s/bar/foo/'
-    -ns			Do not sanitize find and replace data. 
-    				Note: this is turned off when -x mode is active.
-	-id			Filter: Ignore changing directory names.
+    -ns		Do not sanitize find and replace data. 
+    			Note: this is turned off when -x mode is active.
+	-id		Filter: Ignore changing directory names.
 	-tdn		Filter: target directory names, only.
 	-e=xxx		Filter: target only files with file extension XXX
 	-tf=xxx		Filter: target files by filesize that are at least X big. Example 1b, 10.24kb, or 42.02mb.
 	-tfu=xxx	Filter: target filesize unit only. Choose one of these:
-    				[B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
-    				[TB]terabyte, [PB]petabyte, [EB]exabyte, [ZB]zettabyte, [YB]yottabyte.
-	-sa			Sequential append a number: Starting at 1 append the count number to a filename.
-	-sp			Sequential prepend a number: Starting at 1 prepend the count number to a filename.
-	-ts			Add the last modified timestamp to the filename. 
-					This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
-					Timestamp is prepended by default, but you can -sa instead.
+    			[B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
+    			[TB]terabyte, [PB]petabyte, [EB]exabyte, [ZB]zettabyte, [YB]yottabyte.
+	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
+	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
+	-ts		Add the last modified timestamp to the filename. 
+				This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
+				Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx		Completely replace filenames with this phrase & add incrementing number to it.
-					Only targets files within a folder.
-					Defaults to -sa but can -sp, option -r is disabled, and
-					will replace all files, unless -f, -e, -tf, or -tst is set.
+				Only targets files within a folder.
+				Defaults to -sa but can -sp, option -r is disabled, and
+				will replace all files, unless -f, -e, -tf, or -tst is set.
 	-sn=xxx		Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
 	-dup		Find & delete duplicate files at folder location.
-					Supported: Dry run, target file by extension, and force removes all files, but the 1st.
+				Supported: Dry run, target file by extension, and force removes all files, but the 1st.
     -silent		Silent mode-- suppress all warnings, force all changes, and omit displaying results
     -help		Usage options.
     -version	Version number.
