@@ -77,7 +77,7 @@ example i.
    Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
    appended the files last modified timestamp to the name.
     	
-    	frenamer -rf="Vacation" -sp -e=jpg && frenamer -ts -sa -f="Vacation" -e=jpg
+    frenamer -rf="Vacation" -sp -e=jpg && frenamer -ts -sa -f="Vacation" -e=jpg
 
    What happens: the program is run 2 times
         
@@ -99,71 +99,71 @@ example ii.
    the track number and replace them with a dot. Target only mp3 files, and confirm changes before 
    renaming the file.
    
-    	frenamer -c -x -r -e=mp3 -d=/var/music/ -f='s/^(\d+)\s+/$1./'
+    frenamer -c -x -r -e=mp3 -d=/var/music/ -f='s/^(\d+)\s+/$1./'
     	
    Result
    
-    	Confirm change: -rw-rw---- /Volumes/music/Example/ 3.45MB
-       	"01   foo bar.mp3" to "01.foo bar.mp3" [(y)es or (n)o] 
+    Confirm change: -rw-rw---- /Volumes/music/Example/ 3.45MB
+    "01   foo bar.mp3" to "01.foo bar.mp3" [(y)es or (n)o] 
 
 example iii.
 =====
    In the current folder, remove all blank spaces in names and replace them with a underscore.
    
-    	frenamer -f=" "	-s="_"
+    frenamer -f=" "	-s="_"
    
    What happens
   
-    	File: foo bar.doc       Result: foo_bar.doc
-    	File: f o o.doc	        Result: f_o_o.doc
+    File: foo bar.doc       Result: foo_bar.doc
+    File: f o o.doc	        Result: f_o_o.doc
 
 example iv.
 =====
    In the current folder, upper-case the first letter of each word in a filename.
    
-    	frenamer -tw
+    frenamer -tw
     	
    What happens
     	
-    	File: foo_bar.doc  	    Result: Foo_Bar.doc
-    	File: f_o_o.doc	   	    Result: F_O_O.doc
+    File: foo_bar.doc  	    Result: Foo_Bar.doc
+    File: f_o_o.doc	   	    Result: F_O_O.doc
 
 example v.
 =====
    In the current folder, append a number count to all the files with a odt filetype and
    have the count-number start at 8 for files 1MB or larger.
     	
-    	frenamer -tf="1mb" -sa -sn=8 -e=odt
+    frenamer -tf="1mb" -sa -sn=8 -e=odt
 
    What happens
    
-    	File: foo.odt          	Result: foo 08.odt
-    	...
-    	File: foo bar.odt       Result: foo bar 30.odt
+    File: foo.odt          	Result: foo 08.odt
+    ...
+    File: foo bar.odt       Result: foo bar 30.odt
 
 example vi.
 =====
 
    In your music folder, do a dry run search for duplicate files that are of type mp3.
    
-    	frenamer -d=/var/music/ -dr -dup -e=mp3
+    frenamer -d=/var/music/ -dr -dup -e=mp3
 
    What happens
         
-        Possible duplicates: size 8.74 MB
-         [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
-         [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
+    Possible duplicates: size 8.74 MB
+     [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
+     [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
 
 example vii.
 =====
 
    Uppercase all filenames in folder "Photos" and all subfolders contain the word "nasa" in them.
    
-    	frenamer -r -tu -d=./Photos -f="nasa" -s="nasa"
+    frenamer -r -tu -d=./Photos -f="nasa" -s="nasa"
     	
    What happens
     	
-    	File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
+    File: nasa_launch.jpg     	Result: NASA_LAUNCH.JPG
 
 example viii.
 =====
@@ -173,8 +173,8 @@ example viii.
    then it will search for any file with the phrase "nasa" & remove it from filename 
    before the case is changed.
    
-    	frenamer -r -tu -d=./images/ -f="nasa"
+    frenamer -r -tu -d=./images/ -f="nasa"
     
    What happens
     
-    	File: nasa_launch.jpg     	Result: _LAUNCH.JPG
+    File: nasa_launch.jpg     	Result: _LAUNCH.JPG
