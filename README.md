@@ -55,7 +55,7 @@ usage
 	-tfu=xxx	Filter: target filesize unit only. Choose one of these:
     			[B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
     			[TB]terabyte, [PB]petabyte, [EB]exabyte,   [ZB]zettabyte,
-    			[YB]yottabyte.
+    			[YB]yottabyte
 	-sa		Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp		Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts		Add the last modified timestamp to the filename. 
@@ -77,7 +77,7 @@ example i.
    Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
    appended the files last modified timestamp to the name.
     	
-    		frenamer -rf="Vacation" -sp -e=jpg && frenamer -ts -sa -f="Vacation" -e=jpg
+    	frenamer -rf="Vacation" -sp -e=jpg && frenamer -ts -sa -f="Vacation" -e=jpg
 
    What happens: the program is run 2 times
         
