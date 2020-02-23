@@ -1,11 +1,12 @@
 #!/bin/sh -e
 #Author: Jason Campisi
-#Date: 6/30/2013
-#version 0.2.3
+#Date: 2/23/2020
+#version 0.2.4
 #Released under the GPL v2 or higher
 NAME="frenamer"
 EXT="pl"
 FILE="$NAME.$EXT"
+LOCATION="/opt/local/bin"
 echo "$FILE installer:";
 
  echo " Checking if '$FILE' exists in the current folder..."
@@ -40,8 +41,8 @@ else
 	echo " Root access granted for $0";	
 fi
 
-echo " Installing $NAME to /usr/bin/ ...";
-cp ./$FILE /usr/bin/$NAME
+echo " Installing $NAME to $LOCATION/$NAME ...";
+cp ./$FILE $LOCATION/$NAME
 echo " Setup complete."
 echo "Testing install with this command\n>$NAME --version";
 $NAME --version

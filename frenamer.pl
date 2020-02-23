@@ -2,7 +2,7 @@
 =comment
  Authors: Jason Campisi, and includes code by Antonio Bellezza
  Contact: aitsinformation at gmail.com
- Date: 9.29.2007 -> 2019
+ Date: 9.29.2007 -> 2020
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
