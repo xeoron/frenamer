@@ -8,15 +8,13 @@
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
 =cut
 
-#new feature: target only folders        <-- -tdn
-
 use strict;
 use Getopt::Long;
 use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.7.4 frenamer);
+my ($v,$progn)=qw(1.7.5 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -112,10 +110,11 @@ sub cmdlnParm(){	#display the program usage info
     		...
     		file: foo bar.odt          result: foo bar 30.odt
 
-    	Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
-    	Include the files last modified timestamp appended to the name.
+    	Rename all jpg files to "Vacation" with a sequential number prepended to each file. 
+        Next, include the files last modified timestamp appended to the name.
     		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -f="Vacation" -e=jpg
-    		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:18:53.jpg
+    		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:16:53.jpg
+            file: 2345235.jpg          result: 02 Vacation 2013-06-14 20:18:24.jpg
     		...
     		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
 
@@ -125,17 +124,18 @@ sub cmdlnParm(){	#display the program usage info
     		 [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
     		 [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
    
-    	Uppercase all filenames in folder X and all subfolders contain the word "nasa" in them. 
+    	Uppercase all filenames in folder X and all subfolders that contain the word "nasa" in them. 
     		$progn -r -tu -d=./images/ -f="nasa" -s="nasa"
     		file: nasa_launch.jpg     	result: NASA_LAUNCH.JPG
     		
-    	Note about case translations: 
+    	Case translations: 
     	If the substitute option (-s) is omitted when the find option (-f) is being used, 
     	then the -f keyword will be removed from the matched filename before the case is changed.
       		$progn -r -tu -d=./images/ -f="nasa"
        		file: nasa_launch.jpg     	result: _LAUNCH.JPG
        		
-       		
+       	Warning: All filename changes are final. ALWAYS use dry run or confirm mode on files before changing them.
+        
         Copyleft $DATE
 EOD
 }#end else
@@ -172,18 +172,18 @@ my ($file)=@_;
  return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
-sub _makeUC($){ #make it upper-case
+sub _makeUC($){ #make upper-case for regex
  return uc ($_[0]); 
 } #end _makeUC($) 
 
-sub _makeLC($) { #make it lower-case
+sub _makeLC($) { #make lower-case for regex 
  return lc ($_[0]);
 }#end _makeLC($)
 
 sub _transToken($){ # _transToken($) send a single character to be uppercased
  ($_) = @_; 
- my $TT=\&_makeUC; #method call trick for use within regex
-  $_ = _makeLC($_); #setup the filename to be all lowercase
+ my $TT=\&_makeUC; #Poiner method call trick for use within regex
+  $_ = lc $_; #set the filename to be all lowercase
 
  # Look for the word boundaries and uppercase the first aplha char
  # note: does not find _ word boundries.. ALSO, need e option for having the method call to work
@@ -194,7 +194,7 @@ sub _transToken($){ # _transToken($) send a single character to be uppercased
 sub _translateWL($){    #translate 1st letter of each word to uppercase
  ($_) = @_;
   $_ = _transToken(($_[0]));
- my $MAKELOWER=\&_makeLC;
+ my $MAKELOWER=\&_makeLC; #Pointer method call trick for use within regex
 
 #/* treat underscores as word boundries, also make file extensions lowercase */
  if ($_=~m/\_/){
@@ -272,7 +272,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
 #  Append example 2: foo.txt  -> foo 11-09-2014 11:42:16.txt
 
  my ($fname)=@_;
-  return $fname if ( $extension and $fname !~m/(\.$extension)$/);
+  return $fname if ( $extension and $fname !~m/(\.$extension)$/i);
   
   my $value = "";
   if ($timeStamp){
@@ -287,8 +287,8 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
   if( $sequentialPrepend ){ #add next file count number to the start of a filename
  	  $fname = "$value $fname";
   }elsif( $sequentialAppend ){ #add the next file count number to the end of a filename (before the extension)
- 	  if ( $extension and $fname=~m/(\.$extension)$/){	# we know what it is, so insert the number before it 		
-	 	   eval $fname=~s/(\.$extension)$/ $value$1/;
+ 	  if ( $extension and $fname=~m/(\.$extension)$/i){	# we know what it is, so insert the number before it 		
+	 	   eval $fname=~s/(\.$extension)$/ $value$1/i;
  	  }
  	  elsif( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
             if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $value$1/; } 
@@ -356,7 +356,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    #if true discard the filename, else keep it
    return if( $fname=~m/^(\.|\.\.)$/ or                               #if a dot file 
-             ($extension and $fname !~m/(\.$extension)$/) or          #discard all non-matching filename extensions
+             ($extension and $fname !~m/(\.$extension)$/i) or          #discard all non-matching filename extensions
              ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
             );                                                        #if yes to any, then move along
    if (!(-w $fname)) {                                                #if not writable, then move along
@@ -426,16 +426,14 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
 	    return;
 	 }
-	 
-	 #lock, rename, and release the file
-	 if (open (my $FH,, $fold)){
+	 elsif (open (my $FH,, $fold)){ #lock, rename, and release the file
 	    _lock($FH); 
 	       eval { rename ($fold, $fname); };  #try to rename the old file to the new name
 	    _unlock($FH);
 	    close $FH;
 	 }
 	 	 
-	 if ($@) { #where there any errors?
+	 if ($@) { #where there any write to file errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
 	 }elsif($verbose){
 	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
@@ -642,7 +640,7 @@ sub prepData(){  # prep Data settings before the program does the real work.
    	   $sequentialPrepend = 1;
    }
    
-   if (($force and $renameFile) or ($renameFile and $extension and !($renameFile =~m/$extension$/)) and 
+   if (($force and $renameFile) or ($renameFile and $extension and !($renameFile =~m/$extension$/i)) and 
        ask(" The replacement filename \"$renameFile\" is missing an extension: Should it to be of filetype \"$extension\"? ") 
       ){  #should the new name use the filetype that is being targeted?
        $renameFile = sprintf("%s.%s", $renameFile, $extension); 
@@ -756,7 +754,7 @@ sub readDirs {
      my @group;
      my $newGroup=[{}];
      find( sub { -f && ( push @group, $File::Find::name ) }, @{$self->{dirs}} );
-     foreach (@group){ push @$newGroup, $_ if $_ =~m/\.$extension$/; }
+     foreach (@group){ push @$newGroup, $_ if $_ =~m/\.$extension$/i; }
      $self -> {groups} = [ $newGroup ];
   } else { #grab all filenames
      my $group=[{}];
