@@ -114,7 +114,7 @@ sub cmdlnParm(){	#display the program usage info
         Next, include the files last modified timestamp appended to the name.
     		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -f="Vacation" -e=jpg
     		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:16:53.jpg
-            file: 2345235.jpg          result: 02 Vacation 2013-06-14 20:18:24.jpg
+    		file: 2345235.jpg          result: 02 Vacation 2013-06-14 20:18:24.jpg
     		...
     		file: 2345269.jpg          result: 35 Vacation 2013-06-14 12:42:00.jpg
 
