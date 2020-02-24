@@ -1,12 +1,12 @@
 #!/bin/sh -e
 #Author: Jason Campisi
 #Date: 2/23/2020
-#version 0.2.4
+#version 0.2.5
 #Released under the GPL v2 or higher
 NAME="frenamer"
 EXT="pl"
 FILE="$NAME.$EXT"
-LOCATION="/opt/local/bin"
+LOCATION="/usr/bin"
 echo "$FILE installer:";
 
  echo " Checking if '$FILE' exists in the current folder..."

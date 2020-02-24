@@ -16,7 +16,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.7.3 frenamer);
+my ($v,$progn)=qw(1.7.4 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -212,7 +212,7 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase
  }
 
 #/* deal with dot files and file extensions  */
- if ($_=~m/^\./ && (($_=~s/(\.)/$1/g) <=1)) { #CHECK to see if there are, at most, 1 dot in the dot file name by counting how many exist
+ if ($_=~m/^\./ && (($_=~m/(\.)/g) <=1)) { #CHECK to see if there are, at most, 1 dot in the dot file name by counting how many exist
    return $_;
  } elsif ($_=~m/\./){ #make file extensions lowercase
    my @n; my $string="";
@@ -399,7 +399,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 				   return;
 			   }
 			}
-			$fname = _translate($fname) if($transD or $transWL or $transU);
+			$fname = _translate($fname) if($trans);
 			
 			if($sequentialAppend or $sequentialPrepend or $timeStamp) {
 	 		   my $r = _sequential($fname);
