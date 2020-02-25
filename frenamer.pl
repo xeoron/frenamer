@@ -6,6 +6,7 @@
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
  Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
+=end comment
 =cut
 
 use strict;
@@ -14,7 +15,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.7.5 frenamer);
+my ($v,$progn)=qw(1.8.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -142,7 +143,7 @@ EOD
    exit;
 }#end cmdlnParm()
 
-sub ask($){
+sub ask($){                #ask the user a question. Parameters = $message
  return 1 if ($force); # Yes do it, don't ask, if either case is true
  my($msg) = @_; my $answer = "";
   
@@ -152,14 +153,14 @@ sub ask($){
  return $answer=~m/[y|yes]/i;# ? 1 : 0 	 bool value of T/F
 }#end ask($)
 
-sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters $currentFilename and $newFilename
+sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters = $currentFilename, $newFilename, @typeOf_FileSize
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
   my ($currentf, $newf, @sizeType)=@_;  
   
   return ask(" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ");
 }#end confirmChage($)
 
-sub getPerms($){ 	#get file permisions in *nix format. Parameter=$file to lookup
+sub getPerms($){ 	#get file permisions in *nix format. Parameter = $file_to_lookup
 my ($file)=@_; 
  return "???" unless (-e $file && (-f $file || -d $file || -c $file) ); #does it exist? is a directory or file?
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
@@ -172,15 +173,15 @@ my ($file)=@_;
  return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
-sub _makeUC($){ #make upper-case for regex
+sub _makeUC($){ #make first char upper-case for regex. Parameters = $character
  return uc ($_[0]); 
 } #end _makeUC($) 
 
-sub _makeLC($) { #make lower-case for regex 
+sub _makeLC($) { #make first char lower-case for regex. Parameters = $character
  return lc ($_[0]);
 }#end _makeLC($)
 
-sub _transToken($){ # _transToken($) send a single character to be uppercased
+sub _transToken($){ # _transToken($) send a single character to be uppercased. Parameters = $character
  ($_) = @_; 
  my $TT=\&_makeUC; #Poiner method call trick for use within regex
   $_ = lc $_; #set the filename to be all lowercase
@@ -191,7 +192,7 @@ sub _transToken($){ # _transToken($) send a single character to be uppercased
  return $_;
 } #end _transToken($)
 
-sub _translateWL($){    #translate 1st letter of each word to uppercase
+sub _translateWL($){    #translate 1st letter of each word to uppercase. Parameters = $filename
  ($_) = @_;
   $_ = _transToken(($_[0]));
  my $MAKELOWER=\&_makeLC; #Pointer method call trick for use within regex
@@ -307,7 +308,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
  return $fname;
 } #end _sequential($)
 
-sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize in bytes 
+sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
  my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB)]);
@@ -321,7 +322,7 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
   return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
 } #end formatSize($)
 
-sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder to look at
+sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder_to_look_at
  my ($dir)=@_; 
  my @files;
    return -1 if (! -d $dir); #skip path if not a valid directory name
@@ -340,12 +341,12 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
   return 1; 
 } #end frename($) 
 
-sub _lock ($) {  #expects a filehandle reference to lock a file
+sub _lock ($) {  #Parameter = expects a filehandle reference to lock a file
   my ($FH)=@_;
    until (flock($FH, LOCK_EX)){ sleep .10; }
 }#end _lock($)
 
-sub _unlock($) { #expects a filehandle reference to unlock a file
+sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
  my ($FH)=@_;
    until (flock($FH, LOCK_UN)){ sleep .10; }
 }#end _unlock($)
@@ -444,7 +445,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
    
 } #end _rFRename($;$)
 
-sub intoBytes($){ #Parameters: $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
+sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
 #  byte      B
 #  kilobyte  K = 2**10 B = 1024 B
@@ -519,8 +520,12 @@ my @group = $finder -> findDuplicates();
   for my $group ( @group ) {
      print "Possible duplicates: size " . formatSize($group->[0]{size}) . "\n";
      for (1..$#$group) { print " [$_] " . getPerms($group->[$_]) . " " . $group->[$_] . "\n"; }
-     next if $dryRun;  #skip asking which files to keep and deleting duplicates 
-
+     
+     if ($dryRun){ #skip asking which files to keep and deleting duplicates 
+        ++$fcount;
+        next;
+     }  
+     
      my $input ="";
      if ($force){      #don't ask which files to keep, just use the 1st one.
         $input=1; 
@@ -653,7 +658,7 @@ sub prepData(){  # prep Data settings before the program does the real work.
 
    if ($targetSizetype){
        $targetSizetype = uc $targetSizetype;
-       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/);
+       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i);
    }
    if ($targetFilesize){
        if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i) { $targetFilesize = "";}
@@ -675,7 +680,7 @@ sub main(){
  #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
       findDupelicateFiles();
-      return;
+      #return;
    }elsif ($rs){ #recursively traverse the filesystem?
        if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links?
        else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
