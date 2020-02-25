@@ -15,7 +15,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.8.0 frenamer);
+my ($v,$progn)=qw(1.8.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -509,7 +509,7 @@ Package Finder::Looper takes care of the iteration. Each call to
 $looper->next returns a new pair ( start, length ) within a given range, so that consecutive 
 calls sample from different parts of the file. That's the "interlaced" part (which I should 
 maybe have called "interleaved", but hey! this side of the world it's not the best time 
-for choosing names in foreign languages)'.
+for choosing names in foreign languages).'
 =end comment
 =cut
 
@@ -680,7 +680,6 @@ sub main(){
  #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
       findDupelicateFiles();
-      #return;
    }elsif ($rs){ #recursively traverse the filesystem?
        if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links?
        else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
@@ -692,9 +691,13 @@ sub main(){
        if (($sequentialAppend or $sequentialPrepend) && $startCount > 0) { 
            $fcount = ($fcount - $startCount) + 1;
        }
-       
-       if($dryRun) { print "Total Purposed Files To Changes: $fcount\n"; }
-       else{ print "Total Files Changed: $fcount\n"; }
+       my $msg="";
+       if($dryRun) { 
+            if($duplicateFiles){
+                $msg="Total Duplicate Sets Found";
+            }else {$msg="Total Purposed Files To Change"; }
+       }else{ $msg="Total Files Changed"; }
+       print $msg . ": $fcount\n";
    }
 
 }#end main()
