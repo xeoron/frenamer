@@ -509,19 +509,19 @@ Package Finder::Looper takes care of the iteration. Each call to
 $looper->next returns a new pair ( start, length ) within a given range, so that consecutive 
 calls sample from different parts of the file. That's the "interlaced" part (which I should 
 maybe have called "interleaved", but hey! this side of the world it's not the best time 
-for choosing names in foreign languages).
+for choosing names in foreign languages)'.
 =end comment
 =cut
 
 my $finder = Finder -> new( $startDir );
 my @group = $finder -> findDuplicates();
 
-# Result printout and elaboration
+# Result printout and elaboration!
   for my $group ( @group ) {
      print "Possible duplicates: size " . formatSize($group->[0]{size}) . "\n";
      for (1..$#$group) { print " [$_] " . getPerms($group->[$_]) . " " . $group->[$_] . "\n"; }
      
-     if ($dryRun){ #skip asking which files to keep and deleting duplicates 
+     if ($dryRun){ #skip asking which files to keep and don't delete duplicates 
         ++$fcount;
         next;
      }  
