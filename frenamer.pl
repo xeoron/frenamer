@@ -15,7 +15,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.8.1 frenamer);
+my ($v,$progn)=qw(1.8.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -37,11 +37,11 @@ GetOptions(
 	    
 $SIG{INT} = \&sig_handler;
 
-
 sub sig_handler{ 	#capture Ctrl+C signals
   my $signal=shift;
   die "\n $progn v$v: Signal($signal) ~~ Forced Exit!\n";
 }#end sig_handler
+
 
 sub cmdlnParm(){	#display the program usage info 
  if($version){ print "v$v ... by Jason Campisi ... Copyleft $DATE Released under the the GPL v2 or higher\n";}
@@ -143,6 +143,7 @@ EOD
    exit;
 }#end cmdlnParm()
 
+
 sub ask($){                #ask the user a question. Parameters = $message
  return 1 if ($force); # Yes do it, don't ask, if either case is true
  my($msg) = @_; my $answer = "";
@@ -153,12 +154,14 @@ sub ask($){                #ask the user a question. Parameters = $message
  return $answer=~m/[y|yes]/i;# ? 1 : 0 	 bool value of T/F
 }#end ask($)
 
+
 sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters = $currentFilename, $newFilename, @typeOf_FileSize
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
   my ($currentf, $newf, @sizeType)=@_;  
   
   return ask(" Confirm change: " . getPerms($currentf) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t \"$currentf\" to \"$newf\" [(y)es or (n)o] ");
 }#end confirmChage($)
+
 
 sub getPerms($){ 	#get file permisions in *nix format. Parameter = $file_to_lookup
 my ($file)=@_; 
@@ -173,13 +176,16 @@ my ($file)=@_;
  return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
+
 sub _makeUC($){ #make first char upper-case for regex. Parameters = $character
  return uc ($_[0]); 
 } #end _makeUC($) 
 
+
 sub _makeLC($) { #make first char lower-case for regex. Parameters = $character
  return lc ($_[0]);
 }#end _makeLC($)
+
 
 sub _transToken($){ # _transToken($) send a single character to be uppercased. Parameters = $character
  ($_) = @_; 
@@ -191,6 +197,7 @@ sub _transToken($){ # _transToken($) send a single character to be uppercased. P
    $_ =~s/\b([a-z])/$TT->($1)/ge;
  return $_;
 } #end _transToken($)
+
 
 sub _translateWL($){    #translate 1st letter of each word to uppercase. Parameters = $filename
  ($_) = @_;
@@ -234,6 +241,7 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
  return $_;
 } #end _translateWL($)
 
+
 sub _translate($){	#translate case either up or down. Parameter = $file
   my ($name)=@_;
   	
@@ -248,6 +256,7 @@ sub _translate($){	#translate case either up or down. Parameter = $file
     }
     return $name;
 }#end _translate($)
+
 
 sub timeStamp($){ #Returns timestamp of filename. Parameter = $filename
 #display date info sortable format: "Year-Month-Day Hour:Minute:Second"
@@ -308,6 +317,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
  return $fname;
 } #end _sequential($)
 
+
 sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
@@ -321,6 +331,7 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
 
   return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
 } #end formatSize($)
+
 
 sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder_to_look_at
  my ($dir)=@_; 
@@ -341,15 +352,18 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
   return 1; 
 } #end frename($) 
 
+
 sub _lock ($) {  #Parameter = expects a filehandle reference to lock a file
   my ($FH)=@_;
    until (flock($FH, LOCK_EX)){ sleep .10; }
 }#end _lock($)
 
+
 sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
  my ($FH)=@_;
    until (flock($FH, LOCK_UN)){ sleep .10; }
 }#end _unlock($)
+
 
 sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
   my ($fname)=@_;
@@ -445,6 +459,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
    
 } #end _rFRename($;$)
 
+
 sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
 #  byte      B
@@ -471,6 +486,7 @@ sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns siz
   return -1;
 }#end intoBytes($)
 
+
 sub findDupelicateFiles(){
 #------------------------------------------------------------
 # Based off of dupfinder v1: find duplicate files 
@@ -478,6 +494,7 @@ sub findDupelicateFiles(){
 #------------------------------------------------------------
 # Copyright Antonio Bellezza 2003
 # mail: antonio@beautylabs.net
+# Adapted by Jason Campisi 2015
 #------------------------------------------------------------
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -546,6 +563,7 @@ my @group = $finder -> findDuplicates();
      print "\n";
   }
 }#end findDupelicateFiles()
+
 
 sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter = string of data to untaint, flag
  	#flag: >0 run through all filters, <=0 omit some filters
@@ -695,9 +713,9 @@ sub main(){
        if($dryRun) { 
             if($duplicateFiles){
                 $msg="Total Duplicate Sets Found";
-            }else {$msg="Total Purposed Files To Change"; }
-       }else{ $msg="Total Files Changed"; }
-       print $msg . ": $fcount\n";
+            }else {$msg="Purposed Files To Change"; }
+       }else{ $msg="Files Changed"; }
+       print "Total " . $msg . ": $fcount\n";
    }
 
 }#end main()
