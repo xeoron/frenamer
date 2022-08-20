@@ -1,8 +1,8 @@
 #!/bin/sh -e
 #Author: Jason Campisi
-#Date: 9/25/2016
-#version 0.2.5
-#For MacOS X 11 or higher
+#Date: 9/20/2022
+#version 0.2.6
+#For macOS X or higher
 #Released under the GPL v2 or higher
 NAME="frenamer"
 EXT="pl"
@@ -23,14 +23,15 @@ echo "$FILE installer:";
 echo " Setting file to executable...";
 chmod +x ./$FILE
 
-echo " Checking for Perl at /usr/bin/perl ...";
-if [ "$(whereis perl)" != '/usr/bin/perl' ]; then
-	echo " Error: Perl can not be found.";
-	echo " ->If it is installed, then make a symlink that points /usr/bin/perl to the right location, else please install it.";
-	exit 1;
-else 
-	echo " ...Perl found!";
-fi
+# 8.20.22 macOS12 this code now is not seeing it is installed... shell bug
+#  echo " Checking for Perl at /usr/bin/perl ...";
+#  if [ "$(whereis perl)" == '/usr/bin/perl' ]; then
+#  	echo " ...Perl found!";
+#  else 
+#  	echo " Error: Perl can not be found.";
+#  	echo " ->If it is installed, then make a symlink that points /usr/bin/perl to the right location, else please install it.";
+#  	exit 1;
+#  fi
 
 echo " Checking if you have the clearance to install this ...";
 if [ "$(whoami)" != 'root' ]; then

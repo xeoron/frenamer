@@ -1,11 +1,10 @@
 #!/usr/bin/perl -w
 =comment
- Authors: Jason Campisi, and includes code by Antonio Bellezza
- Contact: aitsinformation at gmail.com
- Date: 9.29.2007 -> 2020
+ Authors: Jason Campisi, and includes duplicate file finding code by Antonio Bellezza
+ Date: 9.29.2007 -> 2022
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
- Tested on perl v5.X built for Linux and Mac OS X Leopard or higher
+ Tested on perl v5.X built for Linux and macOS X->12
 =end comment
 =cut
 
@@ -15,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.8.2 frenamer);
+my ($v,$progn)=qw(1.9.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -67,7 +66,7 @@ sub cmdlnParm(){	#display the program usage info
 	-x      Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns     Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-id     Filter: ignore changing directory names.
-	-tdn	Filter: target directory names, only.
+	-tdn	  Filter: target directory names, only.
 	-sa     Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp     Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts     Add the last modified timestamp to the filename. 
@@ -321,7 +320,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
 sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
- my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+ my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB BB GB)]);
 
   for (@$units) {
       last if $size < 1024;
@@ -463,17 +462,19 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
 #  byte      B
-#  kilobyte  K = 2**10 B = 1024 B
-#  megabyte  M = 2**20 B = 1024 * 1024 B
-#  gigabyte  G = 2**30 B = 1024 * 1024 * 1024 B
-#  terabyte  T = 2**40 B = 1024 * 1024 * 1024 * 1024 B
-#  petabyte  P = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
-#  exabyte   E = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  zettabyte Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  yottabyte Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  kilobyte   K = 2**10 B = 1024 B
+#  megabyte   M = 2**20 B = 1024 * 1024 B
+#  gigabyte   G = 2**30 B = 1024 * 1024 * 1024 B
+#  terabyte   T = 2**40 B = 1024 * 1024 * 1024 * 1024 B
+#  petabyte   P = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
+#  exabyte    E = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  zettabyte  Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  yottabyte  Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  brontobyte B = 2**90 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  geopbyte   G = 2**100 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 
-  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i ){ #floating point number & unit-type
-      my ($number, $type, $exp, $units) = (abs($1), _makeUC($2), 0, [qw(B KB MB GB TB PB EB ZB YB)]);
+  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GB)/i ){ #floating point number & unit-type
+      my ($number, $type, $exp, $units) = (abs($1), _makeUC($2), 0, [qw(B KB MB GB TB PB EB ZB YB BB GB)]);
       return $number if $type eq "B";
       for (@$units){
           if ($type eq $units->[$exp]) {
