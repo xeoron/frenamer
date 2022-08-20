@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.9.0 frenamer);
+my ($v,$progn)=qw(1.9.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -677,10 +677,10 @@ sub prepData(){  # prep Data settings before the program does the real work.
 
    if ($targetSizetype){
        $targetSizetype = uc $targetSizetype;
-       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i);
+       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GB)/i);
    }
    if ($targetFilesize){
-       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB)/i) { $targetFilesize = "";}
+       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GB)/i) { $targetFilesize = "";}
        else { $targetFilesize = intoBytes($targetFilesize); } #only use this info comparing bytes so convert
    } 
    
