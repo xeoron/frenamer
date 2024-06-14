@@ -22,8 +22,8 @@ Automated setup
 Manual setup
 
 	chmod +x ./frenamer.pl
-   *nix: sudo cp ./frenamer.pl /usr/bin/frenamer
-   macOS: sudo cp ./frenamer.pl /opt/local/bin/frenamer
+	*nix: sudo cp ./frenamer.pl /usr/bin/frenamer
+	macOS: sudo cp ./frenamer.pl /opt/local/bin/frenamer
 
 usage
 =====
