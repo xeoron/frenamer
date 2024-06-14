@@ -10,8 +10,8 @@ certain key phrase with sequential number added to each file, target a group to 
 sequential number, dry run mode to see what changes will be made without making them, to search recursively through the 
 file-system, ignore changing folder names, and even target files by file-extension.
 
-This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and macOS X->13. 
-Note: It can run on Microsoft Windows, but is not fine-tuned for it
+This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and macOS, 
+Note: It can run on Microsoft Windows, but is not fine-tuned for it.
 
 to install
 =====
