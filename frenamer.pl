@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 =comment
  Authors: Jason Campisi, and includes duplicate file finding code by Antonio Bellezza
- Date: 9.29.2007 -> 2022
+ Date: 9.29.2007 -> 2024
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
- Tested on perl v5.X built for Linux and macOS X->12
+ Tested on perl v5.X built for Linux and macOS
 =end comment
 =cut
 
@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.9.1 frenamer);
+my ($v,$progn)=qw(1.9.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -471,10 +471,10 @@ sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns siz
 #  zettabyte  Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 #  yottabyte  Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 #  brontobyte B = 2**90 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  geopbyte   G = 2**100 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  geopbyte   GPB = 2**100 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 
-  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GB)/i ){ #floating point number & unit-type
-      my ($number, $type, $exp, $units) = (abs($1), _makeUC($2), 0, [qw(B KB MB GB TB PB EB ZB YB BB GB)]);
+  if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GPB)/i ){ #floating point number & unit-type
+      my ($number, $type, $exp, $units) = (abs($1), _makeUC($2), 0, [qw(B KB MB GB TB PB EB ZB YB BB GPB)]);
       return $number if $type eq "B";
       for (@$units){
           if ($type eq $units->[$exp]) {
