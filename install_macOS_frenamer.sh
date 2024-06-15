@@ -1,8 +1,8 @@
 #!/bin/sh -e
 #Author: Jason Campisi
-#Date: 9/20/2022
-#version 0.2.6
-#For macOS X or higher
+#Date: 9/20/2024
+#version 0.2.7
+#For macOS x or higher
 #Released under the GPL v2 or higher
 NAME="frenamer"
 EXT="pl"
@@ -14,9 +14,9 @@ echo "$FILE installer:";
    if [ ! -n "$FILE" ]; then
       echo " Error - Filename is not set!"
       exit 1;
-   elif [ ! -e "$FILE" ]; then
-      echo " Error - The location of '$FILE' does not exist!"
-      exit 1;
+   # elif [ ! -e "$LOCATION$FILE" ]; then
+   #    echo " Error - The location of '$LOCATION$FILE' does exist!!"
+   #    exit 1;
    fi
  echo " ...found!";
  
@@ -44,7 +44,8 @@ else
 fi
 
 echo " Installing $NAME to $LOCATION ...";
-cp ./$FILE $LOCATION$NAME
+
+cp -rf ./$FILE $LOCATION$NAME
 echo " Setup complete."
 echo "Testing install with this command\n>$NAME --version";
 $NAME --version
