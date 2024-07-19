@@ -70,7 +70,7 @@ usage
 	-dup		Find & delete duplicate files at folder location.
 				Supported: Dry run, target file by extension, and force removes all files, but the 1st.
     -silent		Silent mode-- suppress all warnings, force all changes, and omit displaying results
-    -help		Usage options.
+    -h|help		Usage options.
     -version	Version number.
     	
 example i.

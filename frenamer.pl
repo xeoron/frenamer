@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.9.2 frenamer);
+my ($v,$progn)=qw(1.10.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -25,8 +25,8 @@ my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir
 GetOptions(
 	   "f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
 	   "s:s"  =>\$replaceMatchWith,  "td" =>\$transD,         "v"       =>\$verbose,
-	   "c"    =>\$confirm,	    	 "r"  =>\$rs,             "version" =>\$version,
-	   "fs"   =>\$fs,                "x"  =>\$rx,             "help"    =>\$help,
+	   "c"    =>\$confirm,	    	   "r"  =>\$rs,             "version" =>\$version,
+	   "fs"   =>\$fs,                "x"  =>\$rx,             "h|help"    =>\$help,
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
@@ -83,7 +83,7 @@ sub cmdlnParm(){	#display the program usage info
 	-dup         Find & delete duplicate files at folder location.
 	             Supported: Dry run, target file by extension, and force removes all files, but the 1st.
 	-silent      Silent mode-- suppress all warnings, force all changes, and omit displaying results
-	-help        Usage options.
+	-h|help      Usage options.
 	-version     Version number.
 
 
