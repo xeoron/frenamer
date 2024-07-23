@@ -4,11 +4,17 @@ It is time to evolve the rename program that *nix based systems use. Linux has o
 and it's lacking features to better manage bulk renaming of files and folders; and has not changed in over a decade. 
 You deserve something better. We all do!
 
-frenamer makes it easy to rename many files and folders using pattern matching by keywords or by using regex. It, also, includes 
-features for case translation, along with word detection, force or confirm changes, follow symbolic links, rename all files to a 
-certain key phrase with sequential number added to each file, target a group to share the same while only differing by a 
-sequential number, dry run mode to see what changes will be made without making them, to search recursively through the 
-file-system, ignore changing folder names, and even target files by file-extension.
+frenamer makes it easy to find/manage duplicate files, and rename many files/folders using pattern matching by keywords 
+or by using regex. It, also, includes features for case translation, along with word detection, force or confirm changes, 
+follow symbolic links, rename all files to a certain key phrase with sequential number added to each file, target a group 
+to share the same while only differing by a sequential number, dry run mode to see what changes will be made without making them, 
+to search recursively through the file-system, ignore changing folder names, and even target files by file-extension.
+
+File renaming or dry run mode is designed for speed and care.
+The duplicate file handler is designed to be fast and scale for data centre usage using min of memory to find dupicate files. 
+Rule out a file as fast as possible by only comparing files with similar sizes >0, then via random sample lines throughout a 
+file, and only after as last resort compare 2 whole files. Tested on over 30,500 audio files completing in 0.135 a second on a
+macStudio M2 Max machine.
 
 This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and macOS, 
 Note: It can run on Microsoft Windows, but is not fine-tuned for it.
