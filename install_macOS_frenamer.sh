@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #Author: Jason Campisi
-#Date: 9/20/2024
+#Date: 6/20/2024
 #version 0.2.7
 #For macOS x or higher
 #Released under the GPL v2 or higher
