@@ -12,7 +12,7 @@ to search recursively through the file-system, ignore changing folder names, and
 or dry run mode is designed for speed and care.
 
 The duplicate file handler is designed to be fast and scale for data centre usage using min of memory to find dupicate files. 
-Rule out a file as fast as possible by only comparing files with similar sizes >0, then via random sample lines throughout a 
+It rules out a file as fast as possible by only comparing files with similar sizes >0, then via random sample lines throughout a 
 file, and only as last resort compares 2 whole files storing a match in a hash. Tested on over 30,500 audio files completing 
 in 0.135 a second on a macStudio M2 Max machine.
 
