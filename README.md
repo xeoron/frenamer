@@ -14,7 +14,7 @@ or dry run mode is designed for speed and care.
 The duplicate file handler is designed to be fast and scale for data centre usage using min of memory to find dupicate files. 
 It rules out a file as fast as possible by only comparing files with similar sizes >0, then via random sample lines throughout a 
 file, and only as last resort compares 2 whole files storing a match in a hash. Tested on over 30,500 audio files completing 
-in 0.135 seconds on a macStudio M2 Max machine.
+in 0.135 seconds on a macStudio M2 Max machine storage on a external SSD.
 
 This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and macOS, 
 Note: It can run on Microsoft Windows, but is not fine-tuned for it.
