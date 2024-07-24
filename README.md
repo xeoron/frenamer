@@ -44,10 +44,10 @@ usage
    Options
    
     -dr       Dry run mode tests to see what will happen without committing changes.
+    -c        Confirm each file change before doing so.    
     -r        Recursively search the directory tree.
     -fs       Follow symbolic links when recursive mode is on.
     -v        Verbose: show settings and all files that will be changed.
-    -c        Confirm each file change before doing so.
     -tu       Case translation: Upper case.
     -td       Case translation: Down to lower case.
     -tw       Case translation: Uppercase the first letter for word and lowercase the rest.
