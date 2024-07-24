@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.10.2 frenamer);
+my ($v,$progn)=qw(1.10.3 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -26,7 +26,7 @@ GetOptions(
 	   "f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
 	   "s:s"  =>\$replaceMatchWith,  "td" =>\$transD,         "v"       =>\$verbose,
 	   "c"    =>\$confirm,	    	   "r"  =>\$rs,             "version" =>\$version,
-	   "fs"   =>\$fs,                "x"  =>\$rx,             "h|help"    =>\$help,
+	   "fs"   =>\$fs,                "x"  =>\$rx,             "h|help"  =>\$help,
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
@@ -210,9 +210,9 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
         for ( my $c=0; $c <=$#n;  $c++){
              $n[$c] = _transToken($n[$c]);
              if($c==0){                                         #first case
-                if ($_=~m/^\_/){ $string = "_" . $n[$c];        #check to see if it starts with a underscore
-                }else {$string = $n[$c]; }                      #non-dot file format
-             }elsif($c==$#n){ $_ = $string . "_" . ($n[$c]); 	#last case
+                if ($_=~m/^\_/){ $string = "_" . $n[$c]; }      #check to see if it starts with a underscore
+                else {$string = $n[$c]; }                       #non-dot file format
+             }elsif($c==$#n){ $_ = $string . "_" . ($n[$c]);  	#last case
              }else { $string = $string . "_" . $n[$c]; }        #all other cases
         }
    }
@@ -224,12 +224,11 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
  } elsif ($_=~m/\./){ #make file extensions lowercase
    my @n; my $string="";
    if (@n=split /\./, $_){ #split name into sections denoted by the '.' sybmol used in the name
-	for (my $c=0; $c <=$#n;  $c++){
-         if($c==0){                                         	#first case
-            $string = $n[$c];
-	     }elsif($c==$#n){ $_ = $string . "." . _makeLC($n[$c]); #last case
-	     }else { $string = $string . "." . $n[$c]; }        	#all other cases
-	}
+      for (my $c=0; $c <=$#n;  $c++){
+        if($c==0){ $string = $n[$c]; }                       	   #first case
+	      elsif($c==$#n){ $_ = $string . "." . _makeLC($n[$c]); }  #last case
+	      else { $string = $string . "." . $n[$c]; }        	     #all other cases
+      }
    }
    
    #Deal with files ending in two dots lowercase-- end result example: Foo.tar.gz, or Foo.txt.bak, .Foo.conf.bak
@@ -244,15 +243,11 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
 sub _translate($){	#translate case either up or down. Parameter = $file
   my ($name)=@_;
   	
-    if ($name eq ""){ 
-          return "";
-    }elsif ($transWL){
-          return _translateWL($name);
-    }elsif($transD){
-          return _makeLC($name);          
-    }elsif($transU){
-          return _makeUC($name);
-    }
+    if ($name eq ""){ return ""; }
+    elsif ($transWL){ return _translateWL($name); }
+    elsif($transD){ return lc $name; }
+    elsif($transU){ return uc $name; }
+
     return $name;
 }#end _translate($)
 
