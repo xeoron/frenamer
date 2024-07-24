@@ -62,7 +62,8 @@ usage
     -id       Filter: Ignore changing directory names.
     -tdn      Filter: target directory names, only.
     -e=xxx    Filter: target only files with file extension XXX
-    -tf=xxx   Filter: target files by filesize that are at least X big. Example 1b, 10.24kb, or 42.02mb.
+    -tf=xxx   Filter: target files by filesize that are at least X big. 
+               Example: 1b, 10.24kb, or 42.02mb.
     -tfu=xxx  Filter: target filesize unit only. Choose one of these:
                 [B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
                 [TB]terabyte, [PB]petabyte, [EB]exabyte,   [ZB]zettabyte,
