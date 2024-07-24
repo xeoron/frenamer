@@ -7,9 +7,9 @@ You deserve something better. We all do!
 frenamer makes it easy to find/manage duplicate files, and rename many files/folders using pattern matching by keywords 
 or by using regex. It, also, includes features for case translation, along with word detection, force or confirm changes, 
 follow symbolic links, rename all files to a certain key phrase with sequential number added to each file, target a group 
-to share the same while only differing by a sequential number, dry run mode to see what changes will be made without making them, 
-to search recursively through the file-system, ignore changing folder names, and even target files by file-extension. File renaming 
-or dry run mode is designed for speed and care.
+to share the same while only differing by a sequential number, remove .DS_Store files on macOS, dry run mode to see what 
+changes will be made without making them, to search recursively through the file-system, ignore changing folder names, and 
+even target files by file-extension. File renaming or dry run mode is designed for speed and care.
 
 The duplicate file handler is designed to be fast and scale for data centre usage using min of memory to find dupicate files. 
 It rules out a file as fast as possible by only comparing files with similar sizes >0, then via random sample lines throughout a 
@@ -57,6 +57,7 @@ usage
                Set -f for regrex substitution: -f='s/bar/foo/'
     -ns       Do not sanitize find and replace data. 
                Note: this is turned off when -x mode is active.
+    -ds       Delete .DS_Store files along location's path in macOS. Dry run mode not supported.
     -id       Filter: Ignore changing directory names.
     -tdn      Filter: target directory names, only.
     -e=xxx    Filter: target only files with file extension XXX
