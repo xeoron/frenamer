@@ -14,12 +14,12 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.10.4 frenamer);
+my ($v,$progn)=qw(1.11.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
-    $targetFilesize,$targetSizetype, $duplicateFiles)
-	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","", 0);
+    $targetFilesize,$targetSizetype, $dsStore, $duplicateFiles)
+	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","", 0, 0);
 
 
 GetOptions(
@@ -32,7 +32,7 @@ GetOptions(
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
 	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
 	   "ts"   =>\$timeStamp,         "tdn"=>\$targetDirName,  "tfu:s"   =>\$targetSizetype,
-	   "tf:s" =>\$targetFilesize,    "dup"=>\$duplicateFiles);
+	   "tf:s" =>\$targetFilesize,    "ds"=>\$dsStore,         "dup"=>\$duplicateFiles);
 	    
 $SIG{INT} = \&sig_handler;
 
@@ -65,6 +65,7 @@ sub cmdlnParm(){	#display the program usage info
 	-n      Do not overwrite any files, and do not ask.
 	-x      Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns     Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
+  -ds     Delete .DS_Store files target location path in macOS. Dry run mode not supported.
 	-id     Filter: ignore changing directory names.
 	-tdn    Filter: target directory names, only.
 	-sa     Sequential append a number: Starting at 1 append the count number to a filename.
@@ -422,13 +423,16 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 
 	 if( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
 		### mod to also show file size and age of current existing file
-		return if ($noForce);	#dont want to force changes?
-		if( -e $fname ){	 
-			 print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
-		}
+		 return if ($noForce);	#dont want to force changes?
+		 if( -e $fname ){	 
+			  print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
+		 }
 
-		if( !confirmChange($fold,$fname,@sizeType) ){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
-	 }
+     if( !confirmChange($fold,$fname,@sizeType) ){ 
+        print " -->Skipped: $fold\n" if ($verbose && !$silent);
+        return; 
+     }
+	 } #end does file exist with the same new filename
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
 	    ++$fcount;
@@ -614,6 +618,7 @@ sub showUsedOptions() {
 	 print "-->Regular expression mode\n" if($rx);
 	 print "-->Case-Translate Upper-to-Lower\n" if($transD);
 	 print "-->Case-Translate Lower-to-Upper\n" if($transU);
+   print "-->Delete .DS_Store files\n" if($dsStore);
 	 print "-->Case-Translate 1st letter per word to uppercase\n" if($transWL);
 	 print "-->Sequential file count: append number to file name\n" if($sequentialAppend);
 	 print "-->Sequential file count: prepend number to file name\n" if($sequentialPrepend);
@@ -641,9 +646,17 @@ sub prepData(){  # prep Data settings before the program does the real work.
    }
 
    showUsedOptions();
+     
+   if ($dsStore) { #purge .DS_Store files in macOS
+       use English qw' -no_match_vars ';
+       if ( $OSNAME eq "darwin" ){ #target only macOS
+           print "Purging .DS_Store files at $startDir\n" if (!$silent);
+           qx\find "$startDir" -name .DS_Store -type f -delete\;
+       }
+   }
    
    return if ($duplicateFiles); #if true nothing to prep
-   
+
    if ($renameFile ne ""){ #if -rf mode ensure Append/Prepend is set too
        if (($sequentialAppend eq 0 && $sequentialPrepend eq 0) or
        	   ($sequentialAppend && $sequentialPrepend) ){ #if both flags not set or both selected set to append
