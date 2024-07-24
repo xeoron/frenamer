@@ -25,7 +25,7 @@ my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir
 GetOptions(
 	   "f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
 	   "s:s"  =>\$replaceMatchWith,  "td" =>\$transD,         "v"       =>\$verbose,
-	   "c"    =>\$confirm,	    	   "r"  =>\$rs,             "version" =>\$version,
+	   "c"    =>\$confirm,           "r"  =>\$rs,             "version" =>\$version,
 	   "fs"   =>\$fs,                "x"  =>\$rx,             "h|help"  =>\$help,
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
