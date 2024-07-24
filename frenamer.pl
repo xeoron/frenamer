@@ -209,10 +209,10 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
    if (@n=split /\_/, $_){ #split name into sections denoted by the '_' sybmol used in the name
         for ( my $c=0; $c <=$#n;  $c++){
              $n[$c] = _transToken($n[$c]);
-             if($c==0){                                         #first case
+             if ($c==0){                                        #first case
                 if ($_=~m/^\_/){ $string = "_" . $n[$c]; }      #check to see if it starts with a underscore
                 else {$string = $n[$c]; }                       #non-dot file format
-             }elsif($c==$#n){ $_ = $string . "_" . ($n[$c]);  	#last case
+             }elsif ($c==$#n){ $_ = $string . "_" . ($n[$c]);  	#last case
              }else { $string = $string . "_" . $n[$c]; }        #all other cases
         }
    }
@@ -225,8 +225,8 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
    my @n; my $string="";
    if (@n=split /\./, $_){ #split name into sections denoted by the '.' sybmol used in the name
       for (my $c=0; $c <=$#n;  $c++){
-        if($c==0){ $string = $n[$c]; }                       	   #first case
-	      elsif($c==$#n){ $_ = $string . "." . _makeLC($n[$c]); }  #last case
+        if ($c==0){ $string = $n[$c]; }                       	   #first case
+	      elsif ($c==$#n){ $_ = $string . "." . _makeLC($n[$c]); }  #last case
 	      else { $string = $string . "." . $n[$c]; }        	     #all other cases
       }
    }
@@ -245,8 +245,8 @@ sub _translate($){	#translate case either up or down. Parameter = $file
   	
     if ($name eq ""){ return ""; }
     elsif ($transWL){ return _translateWL($name); }
-    elsif($transD){ return lc $name; }
-    elsif($transU){ return uc $name; }
+    elsif ($transD){ return lc $name; }
+    elsif ($transU){ return uc $name; }
 
     return $name;
 }#end _translate($)
