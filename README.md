@@ -57,7 +57,7 @@ usage
                Set -f for regrex substitution: -f='s/bar/foo/'
     -ns       Do not sanitize find and replace data. 
                Note: this is turned off when -x mode is active.
-    -ds       Delete .DS_Store files along location's path in macOS. Dry run mode not supported.
+    -ds       Delete .DS_Store files target location path in macOS. Dry run mode not supported.
     -id       Filter: Ignore changing directory names.
     -tdn      Filter: target directory names, only.
     -e=xxx    Filter: target only files with file extension XXX
