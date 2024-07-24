@@ -56,7 +56,7 @@ sub cmdlnParm(){	#display the program usage info
 	-d=/folder/path   Default "./" Directory to begin searching within.
 									
   optional:
-	-dr     Dry run test to see what will happen without committing changes to files.
+	-dr     Dry run mode test to see what will happen without committing changes to files.
 	-c      Confirm each file change before doing so.
 	-r      Recursively search the directory tree.
 	-fs     Follow symbolic links when recursive mode is on.
