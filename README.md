@@ -77,12 +77,25 @@ usage
     -sn=xxx   Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
     -dup      Find & delete duplicate files at folder location.
                Supports: Dry run, target file by extension, & force removes all files, but the 1st.
-    -silent   Silent mode: suppress all warnings, force all changes, and omit displaying results
+    -silent   Silent mode: suppress all warnings, force all changes, and omit displaying results.
     -version  Version number.
     -h|help   Usage options.
     
-    	
 example i.
+=====
+
+   In your music folder, do a dry run search for duplicate files that are of type mp3.
+   
+    frenamer -d=/var/music/ -dr -dup -e=mp3
+
+   What happens
+        
+    Possible duplicates: size 8.74 MB
+     [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
+     [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
+    Action: Press [Return] to skip or choose one file to keep [1-2]
+      	
+example ii.
 =====
    Rename all jpg files to "Vacation" with a sequential number prepended to each file. Then
    appended the files last modified timestamp to the name.
@@ -103,7 +116,7 @@ example i.
    	  ...
    	  File: 35 Vacation.jpg     Result: 35 Vacation 2013-06-15 8:14:53.jpg
 	
-example ii.
+example iii.
 =====
    In the music folder and all its subfolders use a regular expression to find the blank spaces after 
    the track number and replace them with a dot. Target only mp3 files, and confirm changes before 
@@ -116,7 +129,7 @@ example ii.
     Confirm change: -rw-rw---- /Volumes/music/Example/ 3.45MB
     "01   foo bar.mp3" to "01.foo bar.mp3" [(y)es or (n)o] 
 
-example iii.
+example iv.
 =====
    In the current folder, remove all blank spaces in names and replace them with a underscore.
    
@@ -127,7 +140,7 @@ example iii.
     File: foo bar.doc       Result: foo_bar.doc
     File: f o o.doc	        Result: f_o_o.doc
 
-example iv.
+example v.
 =====
    In the current folder, upper-case the first letter of each word in a filename.
    
@@ -138,7 +151,7 @@ example iv.
     File: foo_bar.doc  	    Result: Foo_Bar.doc
     File: f_o_o.doc	   	    Result: F_O_O.doc
 
-example v.
+example vi.
 =====
    In the current folder, append a number count to all the files with a odt filetype and
    have the count-number start at 8 for files 1MB or larger.
@@ -150,20 +163,6 @@ example v.
     File: foo.odt          	Result: foo 08.odt
     ...
     File: foo bar.odt       Result: foo bar 30.odt
-
-example vi.
-=====
-
-   In your music folder, do a dry run search for duplicate files that are of type mp3.
-   
-    frenamer -d=/var/music/ -dr -dup -e=mp3
-
-   What happens
-        
-    Possible duplicates: size 8.74 MB
-     [1] -rw-r--r-- /var/music/David_Bowie/10.The_Ice_Cave.mp3
-     [2] -rwxr-xr-x /var/music/David_Bowie/10.The_Ice_Cave(2).mp3
-    Action: Press [Return] to skip or choose one file to keep [1-2]
 
 example vii.
 =====
