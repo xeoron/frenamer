@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.10.1 frenamer);
+my ($v,$progn)=qw(1.10.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -536,7 +536,7 @@ my @group = $finder -> findDuplicates();
 
 # Result printout and elaboration!
   for my $group ( @group ) {
-     print "Possible duplicates: size " . formatSize($group->[0]{size}) . "\n";
+     print "Duplicates: size " . formatSize($group->[0]{size}) . "\n";
      for (1..$#$group) { print " [$_] " . getPerms($group->[$_]) . " " . $group->[$_] . "\n"; }
      
      if ($dryRun){ #skip asking which files to keep and don't delete duplicates 
