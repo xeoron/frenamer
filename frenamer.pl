@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.10.3 frenamer);
+my ($v,$progn)=qw(1.10.4 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -168,10 +168,10 @@ my ($file)=@_;
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
  my @per=("---","--x","-w-","-wx","r--","r-x","rw-","rwx");  #for decyphering file permission settings
 
-  if(-l $file){$file="l";}      #symbolic link?
-  elsif(-d $file){$file="d";}   #directory?
-  elsif(-c $file){$file="c";}   #special character file?
-  else{$file="-";}              #normal file
+  if (-l $file){ $file="l"; }      #symbolic link?
+  elsif (-d $file){ $file="d"; }   #directory?
+  elsif (-c $file){ $file="c"; }   #special character file?
+  else { $file="-"; }              #normal file
  return $file . $per[$perm[1]] . $per[$perm[2]] . $per[$perm[3]] ;	#return owner,group,global permission info 
 } #end getPerms($)
 
@@ -244,9 +244,9 @@ sub _translate($){	#translate case either up or down. Parameter = $file
   my ($name)=@_;
   	
     if ($name eq ""){ return ""; }
-    elsif ($transWL){ return _translateWL($name); }
-    elsif ($transD){ return lc $name; }
-    elsif ($transU){ return uc $name; }
+    elsif ($transWL){ return _translateWL($name); } #translate words first letter uppercase rest of a word lower
+    elsif ($transD){ return lc $name; } #lowercase
+    elsif ($transU){ return uc $name; } #uppercase
 
     return $name;
 }#end _translate($)
@@ -365,17 +365,17 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
    print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    #if true discard the filename, else keep it
    return if( $fname=~m/^(\.|\.\.)$/ or                               #if a dot file 
-             ($extension and $fname !~m/(\.$extension)$/i) or          #discard all non-matching filename extensions
+             ($extension and $fname !~m/(\.$extension)$/i) or         #discard all non-matching filename extensions
              ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
             );                                                        #if yes to any, then move along
-   if (!(-w $fname)) {                                                #if not writable, then move along
+   if ( !(-w $fname) ) {                                              #if not writable, then move along
        warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
        return;
    }
    my $size=(stat($fname))[7];
-   return if ($targetFilesize and  $size < $targetFilesize );         #if filesize too small
+    return if ( $targetFilesize and  $size < $targetFilesize );          #if filesize too small
    my @sizeType=formatSize($size); undef $size;
-   return if ($targetSizetype and ($sizeType[1] ne $targetSizetype)); #filter out files that don't match size format type
+    return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
    #end discard filenames filter
    
    my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
@@ -385,7 +385,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
    	 	 
 	 if($renameFile){  #replace each file name with the same name with a unique number added to it
 	 	#ex: foo_file.txt  -->  foobar 01.txt, foobar 02.txt, ... foobar n.txt
-	 	return if( $matchString ne "" && not $fname=~m/$matchString/); 
+	 	return if( $matchString ne "" && not $fname=~m/$matchString/ ); 
 	 	my $r = _sequential($fname);
  	 	return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
  	 	$fname = $r;
@@ -398,10 +398,10 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 		else { $fname = _translate($_) if ($fname ne $_); } #if the name was changed, next try translation	
 	 }
 	 else{#all other cases that are not using Regex
-		if (($matchString eq "" && $trans) or $fname=~m/$matchString/){
-			if(not ($matchString eq "" && $trans) && 
-			   not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) )) 
-			{
+		if ( ($matchString eq "" && $trans) or $fname=~m/$matchString/ ){
+			if ( not ($matchString eq "" && $trans) && 
+			     not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) )
+         ){
 			   eval $fname=~s/$matchString/$replaceMatchWith/g; 
 			   if ($@){ 
 				   warn " >Regex problem against $fname:$@\n" if (!$silent);
@@ -410,7 +410,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 			}
 			$fname = _translate($fname) if($trans);
 			
-			if($sequentialAppend or $sequentialPrepend or $timeStamp) {
+			if( $sequentialAppend or $sequentialPrepend or $timeStamp ) {
 	 		   my $r = _sequential($fname);
  	 		   return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
  	 		   $fname = $r;
@@ -420,14 +420,14 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 
 	 return  if $fold eq $fname; #nothing has changed-- ignore quietly
 
-	 if(!$force  && ($confirm || -e $fname)) {### does a file exist with that same "new" filename? should it be overwritten?
+	 if( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
 		### mod to also show file size and age of current existing file
-		return if $noForce;	#dont want to force changes?
-		if(-e $fname ){	 
+		return if ($noForce);	#dont want to force changes?
+		if( -e $fname ){	 
 			 print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
 		}
 
-		if(!confirmChange($fold,$fname,@sizeType)){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
+		if( !confirmChange($fold,$fname,@sizeType) ){ print " -->Skipped: $fold\n" if ($verbose && !$silent);  return; }
 	 }
 	 
 	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
@@ -435,19 +435,19 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
 	    return;
 	 }
-	 elsif (open (my $FH,, $fold)){ #lock, rename, and release the file
+	 elsif( open (my $FH,, $fold) ){ #lock, rename, and release the file
 	    _lock($FH); 
 	       eval { rename ($fold, $fname); };  #try to rename the old file to the new name
 	    _unlock($FH);
 	    close $FH;
 	 }
 	 	 
-	 if ($@) { #where there any write to file errors?
+	 if($@) { #where there any write to file errors?
 	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
-	 }elsif($verbose){
+	 }elsif( $verbose ){
 	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
 	     ++$fcount;
-	 }else{++$fcount;}
+	 }else{ ++$fcount; }
 	 
    }#end filename rename clause
    
