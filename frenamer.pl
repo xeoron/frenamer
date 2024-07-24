@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.10.0 frenamer);
+my ($v,$progn)=qw(1.10.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -55,7 +55,7 @@ sub cmdlnParm(){	#display the program usage info
 	-s=bar            Default ""   Substitute--replace the matched string with this.
 	-d=/folder/path   Default "./" Directory to begin searching within.
 									
-   optional:
+  optional:
 	-dr     Dry run test to see what will happen without committing changes to files.
 	-c      Confirm each file change before doing so.
 	-r      Recursively search the directory tree.
@@ -70,18 +70,18 @@ sub cmdlnParm(){	#display the program usage info
 	-sa     Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp     Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts     Add the last modified timestamp to the filename. 
-	        This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
-	        Timestamp is prepended by default, but you can -sa instead.
+	         This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
+	         Timestamp is prepended by default, but you can -sa instead.
 	-rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
-	             Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
-	             Will replace all files, unless -f, -e, -tf, or -tst is set. 
+	              Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
+	              Will replace all files, unless -f, -e, -tf, or -tst is set. 
 	-e=xxx       Filter target only files with file extension XXX
 	-tf=xxx      Filter target files by filesize that are at least X big. Example 24b, 10.24kb, 42.02MB, etc.
 	-tfu=xxx     Filter target by filesize unit only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
 	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
 	-[tu|td|tw]  Case translation: translate up, down, or uppercase the first letter for each word.
-	-dup         Find & delete duplicate files at folder location.
-	             Supported: Dry run, target file by extension, and force removes all files, but the 1st.
+	-dup         Find & delete duplicate files at folder location. Skip or choose which one to keep.
+	              Supports: Dry run, target file by extension, & force removes all files, but the 1st.
 	-silent      Silent mode-- suppress all warnings, force all changes, and omit displaying results
 	-h|help      Usage options.
 	-version     Version number.
