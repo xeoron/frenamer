@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.11.0 frenamer);
+my ($v,$progn)=qw(1.11.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -65,7 +65,7 @@ sub cmdlnParm(){	#display the program usage info
 	-n      Do not overwrite any files, and do not ask.
 	-x      Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns     Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
-  -ds     Delete .DS_Store files target location path in macOS. Dry run mode not supported.
+  -ds     Delete .DS_Store files along the target location path in macOS. Dry run mode not supported.
 	-id     Filter: ignore changing directory names.
 	-tdn    Filter: target directory names, only.
 	-sa     Sequential append a number: Starting at 1 append the count number to a filename.
