@@ -75,7 +75,7 @@ usage
                Defaults to -sa but can -sp, option -r is disabled, and
                will replace all files, unless -f, -e, -tf, or -tst is set.
     -sn=xxx   Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
-    -dup      Find & delete duplicate files at folder location. Skip or choose with one to keep!
+    -dup      Find & delete duplicate files at folder location. Skip or choose with one to keep.
                Supports: Dry run, target file by extension, & force removes all files, but the 1st.
     -silent   Silent mode: suppress all warnings, force all changes, and omit displaying results.
     -version  Version number.
