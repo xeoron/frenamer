@@ -14,7 +14,7 @@ use File::Find;
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.11.1 frenamer);
+my ($v,$progn)=qw(1.11.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -712,17 +712,16 @@ sub main(){
        else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
    
-   if(!$silent && $dryRun or $verbose) {
-       print "-------------------------------------------------------\n"; 
+   if(!$silent && $dryRun or $verbose){
+       print "-"  x 55 . "\n";
        #does the file-count need converting?
        if (($sequentialAppend or $sequentialPrepend) && $startCount > 0) { 
            $fcount = ($fcount - $startCount) + 1;
        }
        my $msg="";
-       if($dryRun) { 
-            if($duplicateFiles){
-                $msg="Total Duplicate Sets Found";
-            }else {$msg="Purposed Files To Change"; }
+       if($dryRun){ 
+            if($duplicateFiles){ $msg="Total Duplicate Sets Found"; }
+            else { $msg="Purposed Files To Change"; }
        }else{ $msg="Files Changed"; }
        print "Total " . $msg . ": $fcount\n";
    }
