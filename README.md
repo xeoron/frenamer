@@ -43,7 +43,7 @@ usage
     
    Options
    
-    -dr       Dry run test to see what will happen without committing changes to files.
+    -dr       Dry run mode tests to see what will happen without committing changes.
     -r        Recursively search the directory tree.
     -fs       Follow symbolic links when recursive mode is on.
     -v        Verbose: show settings and all files that will be changed.
