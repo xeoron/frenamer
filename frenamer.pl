@@ -11,10 +11,11 @@
 use strict;
 use Getopt::Long;
 use File::Find;
+no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.11.2 frenamer);
+my ($v,$progn)=qw(1.11.3 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -708,7 +709,7 @@ sub main(){
    if ($duplicateFiles){
       findDupelicateFiles();
    }elsif ($rs){ #recursively traverse the filesystem?
-       if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links?
+       if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); -l && !-e && print "bogus link: $File::Find::name\n";} #follow symbolic links?
        else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
    
