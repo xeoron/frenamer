@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.6 frenamer);
+my ($v,$progn)=qw(1.12.7 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -334,7 +334,7 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
 } #end formatSize($)
 
 
-sub mySort(@){ #case insensitive sort sort a list of files
+sub mySort(@){ #case insensitive sort sort a list of files Parameter = @files
   return sort { "\L$a" cmp "\L$b" } @_;
 }#end mySort(@)
 
@@ -362,11 +362,11 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
 } #end frename($)
 
 
-sub _processFRename{ # expects: (%,$) Hash ->$hashFile{$directory} = @filenames
+sub _processFRename(%){ # sort hash of files then process files Parameter = (%) Hash ->$hashFile{$directory} = @filenames
 # Driver for changing sorted file locations/names and launch processing filenames
  my (%hashFiles) = @_; 
  my (@fvalues, $lastDir)= ("", ".");
-#  use Data::Dumper; print "var \@_\n"; warn Dumper(@_); print "\%hash\n"; print Dumper(%hashFiles); exit 0;
+    #use Data::Dumper; warn Dumper(@_); print "\%hash\n"; print Dumper(%hashFiles); exit 0;
     chdir ($lastDir) if ( -d $lastDir); #first case
     #sort through hash by directory key and filename array, change locations and call the file process driver on each file
     for my $dir (mySort(keys %hashFiles)){ 
@@ -376,7 +376,7 @@ sub _processFRename{ # expects: (%,$) Hash ->$hashFile{$directory} = @filenames
         $lastDir = $dir;
         @fvalues = undef; #reset
     }
-}#end _processFRename(%,$)
+}#end _processFRename(%)
 
 sub _lock ($) {  #Parameter = expects a filehandle reference to lock a file
   my ($FH)=@_;
