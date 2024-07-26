@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.3 frenamer);
+my ($v,$progn)=qw(1.12.4 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -649,7 +649,7 @@ sub showUsedOptions() {
 	 print "-->Regular expression mode\n" if($rx);
 	 print "-->Case-Translate Upper-to-Lower\n" if($transD);
 	 print "-->Case-Translate Lower-to-Upper\n" if($transU);
-   print "-->Delete .DS_Store files\n" if($dsStore);
+	 print "-->Delete .DS_Store files\n" if($dsStore);
 	 print "-->Case-Translate 1st letter per word to uppercase\n" if($transWL);
 	 print "-->Sequential file count: append number to file name\n" if($sequentialAppend);
 	 print "-->Sequential file count: prepend number to file name\n" if($sequentialPrepend);
@@ -658,7 +658,7 @@ sub showUsedOptions() {
 	 print "-->Name all files as $renameFile\n" if($renameFile);
  	 print "-->Start count=$startCount\n" if ($startCount);
 	 print "-->Recursively traverse folder tree\n" if ($rs);
-   print "-->no sorting files\n" if ($noSort);
+	 print "-->no sorting files\n" if ($noSort);
 	 print "-->Dry run test\n" if($dryRun);
 	 print "-->Verbose option\n" if($verbose);
 	 print "-"  x 55 . "\n";
