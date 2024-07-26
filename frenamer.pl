@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.1 frenamer);
+my ($v,$progn)=qw(1.12.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -333,6 +333,7 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
   return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
 } #end formatSize($)
 
+
 sub mySort(@){ #case insensitive sort sort a list of files
   return sort { "\L$a" cmp "\L$b" } @_;
 }#end mySort(@)
@@ -354,19 +355,18 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
    }
    #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
 
-   if ($noSort){ foreach my $fname (@files){ _rFRename($fname); } }
-   else{ foreach my $fname (mySort(@files)){ _rFRename($fname); } }
+   if ($noSort){ foreach ( @files ){ _rFRename($_); } }
+   else{ foreach ( mySort(@files) ){ _rFRename($_); } }
 
   return 1; 
 } #end frename($)
 
+
 sub _processFRename{ # expects: (%,$) Hash ->$hashFile{$directory} = @filenames
 # Driver for changing sorted file locations/names and launch processing filenames
  my (%hashFiles) = @_; 
+ my (@fvalues, $lastDir)= ("", ".");
 #  use Data::Dumper; print "var \@_\n"; warn Dumper(@_); print "\%hash\n"; print Dumper(%hashFiles); exit 0;
- 
- my @fvalues;
- my $lastDir=".";
     chdir ($lastDir) if ( -d $lastDir); #first case
     #sort through hash by directory key and filename array, change locations and call the file process driver on each file
     for my $dir (mySort(keys %hashFiles)){ 
@@ -750,12 +750,12 @@ sub main(){
             my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
             File::Find::find( {wanted=> sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, follow=>1} , $startDir ); 
             #use Data::Dumper; print "follow sorted sym links mode\n"; print Dumper(%hashFiles); #exit 0;
-            _processFRename( %hashFiles ); 
+            _processFRename( %hashFiles ); #process file tree
        }else{ # recursive
-            my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
-            File::Find::finddepth( sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, $startDir ); 
+            my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names
+            File::Find::finddepth( sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, $startDir ); #build a file tree
             #use Data::Dumper; print "follow recursive sort\n"; print Dumper(%hashFiles); exit 0;
-            _processFRename( %hashFiles ); 
+            _processFRename( %hashFiles ); #process file tree
        } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
      
