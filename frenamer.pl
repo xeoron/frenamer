@@ -76,7 +76,7 @@ sub cmdlnParm(){	#display the program usage info
 	         This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
 	         Timestamp is prepended by default, but you can -sa instead.
 	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
-	-nosort      Do not case insensitive sort the files before processing. Does not work on Duplicate files.
+	-nosort      Do not case insensitive sort the files before processing. Does not work in -dup mode.
 	-rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
 	              Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	              Will replace all files, unless -f, -e, -tf, or -tst is set. 
