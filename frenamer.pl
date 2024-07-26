@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.5 frenamer);
+my ($v,$progn)=qw(1.12.6 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -492,14 +492,14 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
 #  byte      B
-#  kilobyte   K   = 2**10 B = 1024 B
-#  megabyte   M   = 2**20 B = 1024 * 1024 B
-#  gigabyte   G   = 2**30 B = 1024 * 1024 * 1024 B
-#  terabyte   T   = 2**40 B = 1024 * 1024 * 1024 * 1024 B
-#  petabyte   P   = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
-#  exabyte    E   = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  zettabyte  Z   = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  yottabyte  Y   = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  kilobyte   KB  = 2**10 B = 1024 B
+#  megabyte   MB  = 2**20 B = 1024 * 1024 B
+#  gigabyte   GB  = 2**30 B = 1024 * 1024 * 1024 B
+#  terabyte   TB  = 2**40 B = 1024 * 1024 * 1024 * 1024 B
+#  petabyte   PB  = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
+#  exabyte    EB  = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  zettabyte  ZB  = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  yottabyte  YB  = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 #  brontobyte BB  = 2**90 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 #  geopbyte   GPB = 2**100 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 
