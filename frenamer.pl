@@ -34,7 +34,7 @@ GetOptions(
 	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
 	   "ts"   =>\$timeStamp,         "tdn"=>\$targetDirName,  "tfu:s"   =>\$targetSizetype,
 	   "tf:s" =>\$targetFilesize,    "ds" =>\$dsStore,        "nosort"  =>\$noSort,
-     "dup"  =>\$duplicateFiles);
+	   "dup"  =>\$duplicateFiles);
 	    
 $SIG{INT} = \&sig_handler;
 
