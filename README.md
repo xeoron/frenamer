@@ -49,7 +49,7 @@ usage
     -fs       Follow symbolic links when recursive mode is on.
     -dup      Find & delete duplicate files at folder location. Skip or choose which one to keep.
                Supports: Dry run, target file by extension, & force removes all files, but the 1st.
-    -nosort   Do not case insensitive sort the files before processing. Does not work in -dup mode.
+    -nosort   Do not case insensitive sort the files before processing. Disabled in -dup mode.
     -v        Verbose: show settings and all files that will be changed.
     -tu       Case translation: Upper case.
     -td       Case translation: Down to lower case.
