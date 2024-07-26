@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.8 frenamer);
+my ($v,$progn)=qw(1.12.9 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -366,8 +366,10 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
 sub _processFRename(%){ # sort hash of files then process files Parameter = (%) Hash ->$hashFile{$directory} = @filenames
 # Driver for changing sorted file locations/names and launch processing filenames
  my (%hashFiles) = @_; 
- my (@fvalues, $lastDir)= ("", ".");
+ my @fvalues; 
+ my $lastDir = Cwd::getcwd() . "";
     #use Data::Dumper; warn Dumper(@_); print "\%hash\n"; print Dumper(%hashFiles); exit 0;
+
     chdir ($lastDir) if ( -d $lastDir); #first case
     #sort through hash by directory key and filename array, change locations and call the file process driver on each file
     for my $dir (mySort(keys %hashFiles)){ 
