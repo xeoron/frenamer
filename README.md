@@ -47,6 +47,9 @@ usage
     -c        Confirm each file change before doing so.    
     -r        Recursively search the directory tree.
     -fs       Follow symbolic links when recursive mode is on.
+    -dup      Find & delete duplicate files at folder location. Skip or choose which one to keep.
+               Supports: Dry run, target file by extension, & force removes all files, but the 1st.
+    -nosort   Do not case insensitive sort the files before processing. Does not work on Duplicate files.
     -v        Verbose: show settings and all files that will be changed.
     -tu       Case translation: Upper case.
     -td       Case translation: Down to lower case.
@@ -65,9 +68,9 @@ usage
     -tf=xxx   Filter: target files by filesize that are at least X big. 
                Example: 1b, 10.24kb, or 42.02mb.
     -tfu=xxx  Filter: target filesize unit only. Choose one of these:
-                [B]bytes,     [KB]kilobyte, [MB]megabytes, [GB]gigabyte, 
-                [TB]terabyte, [PB]petabyte, [EB]exabyte,   [ZB]zettabyte,
-                [YB]yottabyte
+                [B]bytes,      [KB]kilobyte,   [MB]megabytes, [GB]gigabyte, 
+                [TB]terabyte,  [PB]petabyte,   [EB]exabyte,   [ZB]zettabyte,
+                [YB]yottabyte, [BB]brontobyte, [GPB]geopbyte
     -sa       Sequential append a number: Starting at 1 append the count number to a filename.
     -sp       Sequential prepend a number: Starting at 1 prepend the count number to a filename.
     -ts       Add the last modified timestamp to the filename. 
@@ -78,8 +81,6 @@ usage
                Defaults to -sa but can -sp, option -r is disabled, and
                will replace all files, unless -f, -e, -tf, or -tst is set.
     -sn=xxx   Set the start-number count for -sa, -sp, or -rf mode to any positive integer.
-    -dup      Find & delete duplicate files at folder location. Skip or choose which one to keep.
-               Supports: Dry run, target file by extension, & force removes all files, but the 1st.
     -silent   Silent mode: suppress all warnings, force all changes, and omit displaying results.
     -version  Version number.
     -h|help   Usage options.

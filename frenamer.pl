@@ -15,12 +15,12 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.11.3 frenamer);
+my ($v,$progn)=qw(1.12.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
-    $targetFilesize,$targetSizetype, $dsStore, $duplicateFiles)
-	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","", 0, 0);
+    $targetFilesize,$targetSizetype, $dsStore, $noSort, $duplicateFiles)
+	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","", 0,0, 0);
 
 
 GetOptions(
@@ -33,7 +33,8 @@ GetOptions(
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
 	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
 	   "ts"   =>\$timeStamp,         "tdn"=>\$targetDirName,  "tfu:s"   =>\$targetSizetype,
-	   "tf:s" =>\$targetFilesize,    "ds"=>\$dsStore,         "dup"=>\$duplicateFiles);
+	   "tf:s" =>\$targetFilesize,    "ds" =>\$dsStore,        "nosort"  =>\$noSort,
+     "dup"  =>\$duplicateFiles);
 	    
 $SIG{INT} = \&sig_handler;
 
@@ -74,13 +75,17 @@ sub cmdlnParm(){	#display the program usage info
 	-ts     Add the last modified timestamp to the filename. 
 	         This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
 	         Timestamp is prepended by default, but you can -sa instead.
-	-rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
+	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
+	-nosort      Do not case insensitive sort the files before processing. Does not work on Duplicate files.
+  -rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
 	              Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	              Will replace all files, unless -f, -e, -tf, or -tst is set. 
 	-e=xxx       Filter target only files with file extension XXX
 	-tf=xxx      Filter target files by filesize that are at least X big. Example 24b, 10.24kb, 42.02MB, etc.
-	-tfu=xxx     Filter target by filesize unit only. Choose one [B, KB, MB, GB, TB, PB, EB, ZB, YB].
-	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
+	-tfu=xxx     Filter target by filesize unit only. Choose one: [B, KB, MB, GB, TB, PB, EB, ZB, YB, BB, GPB]
+                [B]bytes,      [KB]kilobyte,   [MB]megabytes, [GB]gigabyte, 
+                [TB]terabyte,  [PB]petabyte,   [EB]exabyte,   [ZB]zettabyte,
+                [YB]yottabyte, [BB]brontobyte, [GPB]geopbyte
 	-[tu|td|tw]  Case translation: translate up, down, or uppercase the first letter for each word.
 	-dup         Find & delete duplicate files at folder location. Skip or choose which one to keep.
 	              Supports: Dry run, target file by extension, & force removes all files, but the 1st.
@@ -317,7 +322,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
 sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
- my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB BB GB)]);
+ my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB BB GPB)]);
 
   for (@$units) {
       last if $size < 1024;
@@ -327,6 +332,10 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
 
   return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
 } #end formatSize($)
+
+sub mySort(@){ #case insensitive sort sort a list of files
+  return sort { "\L$a" cmp "\L$b" } @_;
+}#end mySort(@)
 
 
 sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder_to_look_at
@@ -338,16 +347,36 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
       eval { @files = readdir(DLIST) };
       closedir DLIST;
    }else { die "Cannot opendir: $!\n"; }
+
    if ( $@ ){ #report any problems
 		  warn " >Problem reading $dir:\n >$@\n" if (!$silent); 
 		  return -1;
    }
    #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
 
-   foreach my $fname (@files){ _rFRename($fname); }
-  return 1; 
-} #end frename($) 
+   if ($noSort){ foreach my $fname (@files){ _rFRename($fname); } }
+   else{ foreach my $fname (mySort(@files)){ _rFRename($fname); } }
 
+  return 1; 
+} #end frename($)
+
+sub _processFRename{ # expects: (%,$) Hash ->$hashFile{$directory} = @filenames
+# Driver for changing sorted file locations/names and launch processing filenames
+ my (%hashFiles) = @_; 
+#  use Data::Dumper; print "var \@_\n"; warn Dumper(@_); print "\%hash\n"; print Dumper(%hashFiles); exit 0;
+ 
+ my @fvalues;
+ my $lastDir=".";
+    chdir ($lastDir) if ( -d $lastDir); #first case
+    #sort through hash by directory key and filename array, change locations and call the file process driver on each file
+    for my $dir (mySort(keys %hashFiles)){ 
+        @fvalues = mySort( @{ $hashFiles{$dir} } );
+        chdir ($dir) if ($dir ne $lastDir); #if directory changed
+        foreach (@fvalues){ _rFRename($_) if ($_ ne "." || $_ ne ".."); }  #process filename
+        $lastDir = $dir;
+        @fvalues = undef; #reset
+    }
+}#end _processFRename(%,$)
 
 sub _lock ($) {  #Parameter = expects a filehandle reference to lock a file
   my ($FH)=@_;
@@ -370,12 +399,13 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
              ($extension and $fname !~m/(\.$extension)$/i) or         #discard all non-matching filename extensions
              ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
             );                                                        #if yes to any, then move along
-   if ( !(-w $fname) ) {                                              #if not writable, then move along
-       warn " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
-       return;
-   }
+    if ( !(-w $fname) ) {                                              #if not writable, then move along
+        print " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
+        return;
+    }
    my $size=(stat($fname))[7];
     return if ( $targetFilesize and  $size < $targetFilesize );          #if filesize too small
+   
    my @sizeType=formatSize($size); undef $size;
     return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
    #end discard filenames filter
@@ -462,15 +492,15 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
 #  byte      B
-#  kilobyte   K = 2**10 B = 1024 B
-#  megabyte   M = 2**20 B = 1024 * 1024 B
-#  gigabyte   G = 2**30 B = 1024 * 1024 * 1024 B
-#  terabyte   T = 2**40 B = 1024 * 1024 * 1024 * 1024 B
-#  petabyte   P = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
-#  exabyte    E = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  zettabyte  Z = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  yottabyte  Y = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
-#  brontobyte B = 2**90 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  kilobyte   K   = 2**10 B = 1024 B
+#  megabyte   M   = 2**20 B = 1024 * 1024 B
+#  gigabyte   G   = 2**30 B = 1024 * 1024 * 1024 B
+#  terabyte   T   = 2**40 B = 1024 * 1024 * 1024 * 1024 B
+#  petabyte   P   = 2**50 B = 1024 * 1024 * 1024 * 1024 * 1024 B
+#  exabyte    E   = 2**60 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  zettabyte  Z   = 2**70 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  yottabyte  Y   = 2**80 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
+#  brontobyte BB  = 2**90 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 #  geopbyte   GPB = 2**100 B = 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 B
 
   if ($size =~m/([-+]?[0-9]*\.?[0-9]+)\s?(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GPB)/i ){ #floating point number & unit-type
@@ -628,6 +658,7 @@ sub showUsedOptions() {
 	 print "-->Name all files as $renameFile\n" if($renameFile);
  	 print "-->Start count=$startCount\n" if ($startCount);
 	 print "-->Recursively traverse folder tree\n" if ($rs);
+   print "-->no sorting files\n" if ($noSort);
 	 print "-->Dry run test\n" if($dryRun);
 	 print "-->Verbose option\n" if($verbose);
 	 print "-"  x 55 . "\n";
@@ -664,9 +695,9 @@ sub prepData(){  # prep Data settings before the program does the real work.
            $sequentialAppend = 0;  # add the end of name
            $sequentialPrepend = 1; # add to the beginning
        }
-       $rs = 0; #disable, since it does not reset the number-count when going into each new folder
+       $rs = 0 if ($noSort); #disable, since it does not reset the number-count when going into each new folder
    }elsif (!$timeStamp && $sequentialAppend or $sequentialPrepend) { #if -sa or -sp disable -r mode
-       $rs = 0; #disable, since it does not reset the number-count when going into each new folder 
+       $rs = 0 if ($noSort); #disable, since it does not reset the number-count when going into each new folder 
    }elsif ($timeStamp && $sequentialAppend){
    		$sequentialPrepend = 0;
    }elsif ($timeStamp){
@@ -686,14 +717,15 @@ sub prepData(){  # prep Data settings before the program does the real work.
 
    if ($targetSizetype){
        $targetSizetype = uc $targetSizetype;
-       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GB)/i);
+       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GPB)/i);
    }
    if ($targetFilesize){
-       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GB)/i) { $targetFilesize = "";}
+       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GPB)/i) { $targetFilesize = "";}
        else { $targetFilesize = intoBytes($targetFilesize); } #only use this info comparing bytes so convert
    } 
    
 }#end prepData()
+
 
 sub main(){
   #Setup settings and messages
@@ -702,17 +734,31 @@ sub main(){
                         !$timeStamp && !$sequentialAppend && !$sequentialPrepend &&
                         !$duplicateFiles))
                     );
-
    prepData();
-  
+
  #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
-      findDupelicateFiles();
-   }elsif ($rs){ #recursively traverse the filesystem?
-       if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); -l && !-e && print "bogus link: $File::Find::name\n";} #follow symbolic links?
-       else{ finddepth(sub {_rFRename($_); }, $startDir); } #follow folders within folders
+       findDupelicateFiles();
+   }elsif ($noSort){ #no sort recursively traverse the filesystem?
+       if ($rs){ 
+          if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links? Can't sort with follow flag
+          else{ File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
+       }else{ fRename($startDir); }
+   }elsif ($rs || $fs){ #recursively traverse the filesystem?
+       my @files;   
+       if ($fs) { #follow symbolic links? 
+            my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
+            File::Find::find( {wanted=> sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, follow=>1} , $startDir ); 
+            #use Data::Dumper; print "follow sorted sym links mode\n"; print Dumper(%hashFiles); #exit 0;
+            _processFRename( %hashFiles ); 
+       }else{ # recursive
+            my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
+            File::Find::finddepth( sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, $startDir ); 
+            #use Data::Dumper; print "follow recursive sort\n"; print Dumper(%hashFiles); exit 0;
+            _processFRename( %hashFiles ); 
+       } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
-   
+     
    if(!$silent && $dryRun or $verbose){
        print "-"  x 55 . "\n";
        #does the file-count need converting?
@@ -726,7 +772,7 @@ sub main(){
        }else{ $msg="Files Changed"; }
        print "Total " . $msg . ": $fcount\n";
    }
-
+ exit 0;
 }#end main()
 
 main();		#run the code
