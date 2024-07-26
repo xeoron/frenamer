@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.2 frenamer);
+my ($v,$progn)=qw(1.12.3 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -745,14 +745,12 @@ sub main(){
           else{ File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
        }else{ fRename($startDir); }
    }elsif ($rs || $fs){ #recursively traverse the filesystem?
-       my @files;   
+       my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
        if ($fs) { #follow symbolic links? 
-            my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
             File::Find::find( {wanted=> sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, follow=>1} , $startDir ); 
             #use Data::Dumper; print "follow sorted sym links mode\n"; print Dumper(%hashFiles); #exit 0;
             _processFRename( %hashFiles ); #process file tree
        }else{ # recursive
-            my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names
             File::Find::finddepth( sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, $startDir ); #build a file tree
             #use Data::Dumper; print "follow recursive sort\n"; print Dumper(%hashFiles); exit 0;
             _processFRename( %hashFiles ); #process file tree
