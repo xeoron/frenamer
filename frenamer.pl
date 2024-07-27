@@ -299,20 +299,20 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
   if ( $sequentialPrepend ){ #add next file count number to the start of a filename
        $fname = "$value $fname";
   }elsif ( $sequentialAppend ){ #add the next file count number to the end of a filename (before the extension)
- 	   if ( $extension and $fname=~m/(\.$extension)$/i){	# we know what it is, so insert the number before it 		
-	 	    eval $fname=~s/(\.$extension)$/ $value$1/i;
- 	   } elsif ( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
-        if ( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $value$1/; } 
-        else { eval $fname=~s/(\..+)$/ $value$1/; }
- 	   } elsif ( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick value at the end
- 	      $fname = "$fname $value";
- 	   } else { return ""; } #Can't append value to $fname  
+     if ( $extension and $fname=~m/(\.$extension)$/i){	# we know what it is, so insert the number before it 		
+          eval $fname=~s/(\.$extension)$/ $value$1/i;
+     } elsif ( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
+          if ( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $value$1/; } 
+          else { eval $fname=~s/(\..+)$/ $value$1/; }
+     } elsif ( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick value at the end
+          $fname = "$fname $value";
+     } else { return ""; } #Can't append value to $fname  
  	  
- 	   if ( $@ ){ #report any problems
-		    warn " >Regex problem: appending value sequence against $fname:$@\n" if (!$silent); 
-		    return "";
+     if ( $@ ){ #report any problems
+          warn " >Regex problem: appending value sequence against $fname:$@\n" if (!$silent); 
+          return "";
      }
-  }
+  }#end elseif
   
  return $fname;
 } #end _sequential($)
