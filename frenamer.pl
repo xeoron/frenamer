@@ -251,12 +251,12 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
 sub _translate($){	#translate case either up or down. Parameter = $file
   my ($name)=@_;
   	
-    if ($name eq ""){ return ""; }
-    elsif ($transWL){ return _translateWL($name); } #translate words first letter uppercase rest of a word lower
-    elsif ($transD){ return lc $name; } #lowercase
-    elsif ($transU){ return uc $name; } #uppercase
+   if ($name eq ""){ return ""; }
+   elsif ($transWL){ return _translateWL($name); } #translate words first letter uppercase rest of a word lower
+   elsif ($transD){ return lc $name; } #lowercase
+   elsif ($transU){ return uc $name; } #uppercase
 
-    return $name;
+  return $name;
 }#end _translate($)
 
 
@@ -289,31 +289,29 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
   my $value = "";
   if ($timeStamp){
       $value = timeStamp($fname);
-  }else {
+  } else {
       return "" if -d $fname; #when appending a number to a file, skip folders
       $value = sprintf("%002d", $fcount + 1); #insert 0 before 1->9, therefore 1 is 01
   }
 
   $fname = $renameFile if ($renameFile ne "");
 
-  if( $sequentialPrepend ){ #add next file count number to the start of a filename
- 	  $fname = "$value $fname";
-  }elsif( $sequentialAppend ){ #add the next file count number to the end of a filename (before the extension)
- 	  if ( $extension and $fname=~m/(\.$extension)$/i){	# we know what it is, so insert the number before it 		
-	 	   eval $fname=~s/(\.$extension)$/ $value$1/i;
- 	  }
- 	  elsif( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
-            if( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $value$1/; } 
-            else { eval $fname=~s/(\..+)$/ $value$1/; }
- 	  }
- 	  elsif( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick value at the end
- 	       $fname = "$fname $value";
- 	  }else{ return ""; } #Can't append value to $fname  
+  if ( $sequentialPrepend ){ #add next file count number to the start of a filename
+       $fname = "$value $fname";
+  }elsif ( $sequentialAppend ){ #add the next file count number to the end of a filename (before the extension)
+ 	   if ( $extension and $fname=~m/(\.$extension)$/i){	# we know what it is, so insert the number before it 		
+	 	    eval $fname=~s/(\.$extension)$/ $value$1/i;
+ 	   } elsif ( $fname=~m/(\..+)$/ )  { #if a file, find the unknown extension and insert the number before it
+        if ( $fname=~m/(\.tar\.gz)$/ ){ eval $fname=~s/(\.tar\.gz)$/ $value$1/; } 
+        else { eval $fname=~s/(\..+)$/ $value$1/; }
+ 	   } elsif ( $renameFile ne "" ){ #-rf mode & failed above test so there's no filetype in the name, stick value at the end
+ 	      $fname = "$fname $value";
+ 	   } else { return ""; } #Can't append value to $fname  
  	  
- 	  if ( $@ ){ #report any problems
-		  warn " >Regex problem: appending value sequence against $fname:$@\n" if (!$silent); 
-		  return "";
- 	  }
+ 	   if ( $@ ){ #report any problems
+		    warn " >Regex problem: appending value sequence against $fname:$@\n" if (!$silent); 
+		    return "";
+     }
   }
   
  return $fname;
@@ -435,8 +433,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 	 	     my $r = _sequential($fname);
  	 	     return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
  	 	     $fname = $r;
- 	    }elsif($rx){
-         #using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
+ 	    }elsif($rx){ #using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
 		     $_=$fname if !$rs;
 		     eval $matchString;
 		     if ($@){ warn " >Regex problem against file name $fname: $@s\n" if (!$silent); }
@@ -444,29 +441,28 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 	    }else{  #all other cases that are not using Regex
 		      if ( ($matchString eq "" && $trans) or $fname=~m/$matchString/ ){
               if ( not ($matchString eq "" && $trans) && 
-                  not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) )
-                ){
-			            eval $fname=~s/$matchString/$replaceMatchWith/g; 
-			            if ($@){ warn " >Regex problem against $fname:$@\n" if (!$silent); return; }
-			        }
+                   not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) ) ){
+                   eval $fname=~s/$matchString/$replaceMatchWith/g; 
+                   if ($@){ warn " >Regex problem against $fname:$@\n" if (!$silent); return; }
+              }
               $fname = _translate($fname) if($trans);
 			    
               if ( $sequentialAppend or $sequentialPrepend or $timeStamp ) {
-	 		            my $r = _sequential($fname);
- 	 		            return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
- 	 		            $fname = $r;
+                   my $r = _sequential($fname);
+                   return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
+                   $fname = $r;
               }
           }
-	    }
+      }
       
-	    return  if $fold eq $fname; #nothing has changed-- ignore quietly
+      return  if $fold eq $fname; #nothing has changed-- ignore quietly
       
       if ( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
-		    ### mod to also show file size and age of current existing file
+         ### mode to also show file size and age of current existing file
          return if ($noForce);	#dont want to force changes?
-         if( -e $fname ){ print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; }
-         if( !confirmChange($fold,$fname,@sizeType) ){ print " -->Skipped: $fold\n" if ($verbose && !$silent); return; }
-	    } #end does file exist with the same new filename
+         if ( -e $fname ){ print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; }
+         if ( !confirmChange($fold,$fname,@sizeType) ){ print " -->Skipped: $fold\n" if ($verbose && !$silent); return; }
+      } #end does file exist with the same new filename
 	 
       if ($dryRun) { #dry run mode: display what the change will look like, update count then return
           ++$fcount;
@@ -479,15 +475,15 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
           close $FH;
       }
 	 	 
-	    if($@) { #where there any write to file errors?
-	        warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
+      if($@) { #where there any write to file errors?
+          warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
       }elsif( $verbose ){
           print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
           ++$fcount;
       }else{ ++$fcount; }
 	 
-   }#end change filename if clause
-   
+	 }#end change filename if clause
+return;   
 } #end _rFRename($;$)
 
 
