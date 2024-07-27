@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.9 frenamer);
+my ($v,$progn)=qw(1.12.10 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -324,14 +324,15 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
  my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB BB GPB)]);
+ return "?" if ($size eq "");
 
   for (@$units) {
-      last if $size < 1024;
-      $size /= 1024;
-      $exp++;
+       last if $size < 1024;
+       $size /= 1024;
+       $exp++;
   }
-
-  return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);
+  
+ return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);  
 } #end formatSize($)
 
 
@@ -357,7 +358,11 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
    #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
 
    if ($noSort){ foreach ( @files ){ _rFRename($_); } }
-   else{ foreach ( mySort(@files) ){ _rFRename($_); } }
+   else{ 
+        my %seen = ();
+        my @uniquFiles = grep { ! $seen{$_} ++ } @files; #purge duplicate files in list
+        foreach ( mySort(@uniquFiles) ){ _rFRename($_); } 
+   }
 
   return 1; 
 } #end frename($)
@@ -366,14 +371,17 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
 sub _processFRename(%){ # sort hash of files then process files Parameter = (%) Hash ->$hashFile{$directory} = @filenames
 # Driver for changing sorted file locations/names and launch processing filenames
  my (%hashFiles) = @_; 
- my @fvalues; 
- my $lastDir = Cwd::getcwd() . "";
+ my $lastDir = Cwd::getcwd() . ""; 
     #use Data::Dumper; warn Dumper(@_); print "\%hash\n"; print Dumper(%hashFiles); exit 0;
 
     chdir ($lastDir) if ( -d $lastDir); #first case
     #sort through hash by directory key and filename array, change locations and call the file process driver on each file
+    my @fvalues; 
     for my $dir (mySort(keys %hashFiles)){ 
-        @fvalues = mySort( @{ $hashFiles{$dir} } );
+        my %seen = ();
+        @fvalues = grep { ! $seen{$_} ++ } (mySort( @{ $hashFiles{$dir} } )); #sort and purge duplicate files in the list
+        
+        #@fvalues uniqu = grep { ! $seen{$_} ++ } @list;
         chdir ($dir) if ($dir ne $lastDir); #if directory changed
         foreach (@fvalues){ _rFRename($_) if ($_ ne "." || $_ ne ".."); }  #process filename
         $lastDir = $dir;
@@ -396,98 +404,89 @@ sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
 sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
   my ($fname)=@_;
 
-   print "  " . Cwd::getcwd() . SLASH . "$fname\n" if($verbose && !$silent);
    #if true discard the filename, else keep it
-   return if( $fname=~m/^(\.|\.\.)$/ or                               #if a dot file 
+   return if( $fname=~m/^(\.|\.\.|\.DS_Store)$/ or                    #if a dot file or macOS .DS_Store
              ($extension and $fname !~m/(\.$extension)$/i) or         #discard all non-matching filename extensions
              ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
             );                                                        #if yes to any, then move along
-    if ( !(-w $fname) ) {                                              #if not writable, then move along
-        print " --> " . Cwd::getcwd() . SLASH . "$fname is not writable, skipping file\n" if (!$silent);
+   if ( !(-w $fname) ) {                                              #if not writable, then move along
+        print " --> " . Cwd::getcwd() . SLASH . "$fname is not writable/findable. Skipping file: file or folder changed!\n" if (!$silent);
         return;
-    }
-   my $size=(stat($fname))[7];
-    return if ( $targetFilesize and  $size < $targetFilesize );          #if filesize too small
+   }
+  
+   $fname =~ tr/’/'/d if ( $matchString eq "'" && $fname =~m/’/ );    #apostrophe bug fix: ’ and ' are similar treat them as the same 
    
-   my @sizeType=formatSize($size); undef $size;
+   my $size = (stat($fname))[7];
+   $size = 0 if (! defined $size);                                    #fixes bug when existing file data fails to return from stat
+    return if ( $targetFilesize and  $size < $targetFilesize );       #if filesize too small
+
+   my @sizeType = formatSize($size . ""); undef $size;
     return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
    #end discard filenames filter
    
-   my $trans=$transU+$transD+$transWL; #add the bools together.. to speed up comparisons
+   my $trans = $transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
    if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
-	 my $fold=$fname;  
-   	 	 
-	 if($renameFile){  #replace each file name with the same name with a unique number added to it
-	 	#ex: foo_file.txt  -->  foobar 01.txt, foobar 02.txt, ... foobar n.txt
-	 	return if( $matchString ne "" && not $fname=~m/$matchString/ ); 
-	 	my $r = _sequential($fname);
- 	 	return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
- 	 	$fname = $r;
- 	 }
- 	 elsif($rx){
-		#using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
-		$_=$fname if !$rs;
-		eval $matchString;
-		if ($@){ warn " >Regex problem against file name $fname: $@s\n" if (!$silent); }
-		else { $fname = _translate($_) if ($fname ne $_); } #if the name was changed, next try translation	
-	 }
-	 else{#all other cases that are not using Regex
-		if ( ($matchString eq "" && $trans) or $fname=~m/$matchString/ ){
-			if ( not ($matchString eq "" && $trans) && 
-			     not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) )
-         ){
-			   eval $fname=~s/$matchString/$replaceMatchWith/g; 
-			   if ($@){ 
-				   warn " >Regex problem against $fname:$@\n" if (!$silent);
-				   return;
-			   }
-			}
-			$fname = _translate($fname) if($trans);
-			
-			if( $sequentialAppend or $sequentialPrepend or $timeStamp ) {
-	 		   my $r = _sequential($fname);
- 	 		   return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
- 	 		   $fname = $r;
-			}
-		}
-	 }
+	    my $fold=$fname;  
 
-	 return  if $fold eq $fname; #nothing has changed-- ignore quietly
-
-	 if( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
-		### mod to also show file size and age of current existing file
-		 return if ($noForce);	#dont want to force changes?
-		 if( -e $fname ){	 
-			  print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; 
-		 }
-
-     if( !confirmChange($fold,$fname,@sizeType) ){ 
-        print " -->Skipped: $fold\n" if ($verbose && !$silent);
-        return; 
-     }
-	 } #end does file exist with the same new filename
+	    if($renameFile){  #replace each file name with the same name with a unique number added to it
+	 	     #ex: foo_file.txt  -->  foobar 01.txt, foobar 02.txt, ... foobar n.txt
+	 	     return if( $matchString ne "" && not $fname=~m/$matchString/ ); 
+	 	     my $r = _sequential($fname);
+ 	 	     return if ($r eq "");  #next file if if blank current filename is either a folder or failed to append or prepend number	 
+ 	 	     $fname = $r;
+ 	    }elsif($rx){
+         #using regex for translation: example where f='s/^(foo)gle/$1bar/'  or f='y/a-z/A-Z/'  or f='s/(foo|foobar)/bar/g'	
+		     $_=$fname if !$rs;
+		     eval $matchString;
+		     if ($@){ warn " >Regex problem against file name $fname: $@s\n" if (!$silent); }
+		     else { $fname = _translate($_) if ($fname ne $_); } #if the name was changed, next try translation	
+	    }else{  #all other cases that are not using Regex
+		      if ( ($matchString eq "" && $trans) or $fname=~m/$matchString/ ){
+              if ( not ($matchString eq "" && $trans) && 
+                  not ($replaceMatchWith eq "" and ($sequentialAppend or $sequentialPrepend) )
+                ){
+			            eval $fname=~s/$matchString/$replaceMatchWith/g; 
+			            if ($@){ warn " >Regex problem against $fname:$@\n" if (!$silent); return; }
+			        }
+              $fname = _translate($fname) if($trans);
+			    
+              if ( $sequentialAppend or $sequentialPrepend or $timeStamp ) {
+	 		            my $r = _sequential($fname);
+ 	 		            return if ($r eq "");  #next file if blank since current filename is either a folder or failed to append or prepend number	 
+ 	 		            $fname = $r;
+              }
+          }
+	    }
+      
+	    return  if $fold eq $fname; #nothing has changed-- ignore quietly
+      
+      if ( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
+		    ### mod to also show file size and age of current existing file
+         return if ($noForce);	#dont want to force changes?
+         if( -e $fname ){ print">Transformation: the following file already exists-- overwrite the file? $fname\n  --->"; }
+         if( !confirmChange($fold,$fname,@sizeType) ){ print " -->Skipped: $fold\n" if ($verbose && !$silent); return; }
+	    } #end does file exist with the same new filename
 	 
-	 if($dryRun){ #dry run mode: display what the change will look like, update count then return
-	    ++$fcount;
-	    print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
-	    return;
-	 }
-	 elsif( open (my $FH,, $fold) ){ #lock, rename, and release the file
-	    _lock($FH); 
-	       eval { rename ($fold, $fname); };  #try to rename the old file to the new name
-	    _unlock($FH);
-	    close $FH;
-	 }
+      if ($dryRun) { #dry run mode: display what the change will look like, update count then return
+          ++$fcount;
+          print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
+          return;
+      }elsif( open (my $FH,, $fold) ){ #lock, rename, and release the file
+          _lock($FH); 
+          eval { rename ($fold, $fname); };  #try to rename the old file to the new name
+          _unlock($FH);
+          close $FH;
+      }
 	 	 
-	 if($@) { #where there any write to file errors?
-	     warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
-	 }elsif( $verbose ){
-	     print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
-	     ++$fcount;
-	 }else{ ++$fcount; }
+	    if($@) { #where there any write to file errors?
+	        warn "ERROR-- Can't rename " . Cwd::getcwd() . SLASH . "\n\t\"$fold\" to \"$fname\": $!\n" if  (!$silent);
+      }elsif( $verbose ){
+          print " Updated " . getPerms($fname) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n"; 
+          ++$fcount;
+      }else{ ++$fcount; }
 	 
-   }#end filename rename clause
+   }#end change filename if clause
    
 } #end _rFRename($;$)
 
@@ -608,6 +607,7 @@ sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter 
 		if ($1 eq "("){ $_ =qw(\\\(); }
 		elsif ($1 eq ")"){ $_ =qw(\\\)); }
 		elsif ($1 eq "\^" && $flag){ $_ =qw(\\^); }
+		#elsif ($1 eq "\'" && $flag){ $_ = "\N{U+0027}"; } #<-- unicode for Apostraphe
 		elsif ($1 eq "\$" && $flag){ $_ =qw(\\$); }
 		elsif ($1 eq "\+" && $flag){ $_ =qw(\\+); }
 		elsif ($1 eq "\*" && $flag){ $_ =qw(\\*); }
@@ -748,7 +748,7 @@ sub main(){
           else{ File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
        }else{ fRename($startDir); }
    }elsif ($rs || $fs){ #recursively traverse the filesystem?
-       my %hashFiles; # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
+       my %hashFiles = (); # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
        if ($fs) { #follow symbolic links? 
             File::Find::find( {wanted=> sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, follow=>1} , $startDir ); 
             #use Data::Dumper; print "follow sorted sym links mode\n"; print Dumper(%hashFiles); #exit 0;
