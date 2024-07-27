@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.10 frenamer);
+my ($v,$progn)=qw(1.12.11 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -400,8 +400,8 @@ sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
 
 
 sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
-  my ($fname)=@_;
-
+  my ($fname) = @_;
+  
    #if true discard the filename, else keep it
    return if( $fname=~m/^(\.|\.\.|\.DS_Store)$/ or                    #if a dot file or macOS .DS_Store
              ($extension and $fname !~m/(\.$extension)$/i) or         #discard all non-matching filename extensions
@@ -411,7 +411,8 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
         print " --> " . Cwd::getcwd() . SLASH . "$fname is not writable/findable. Skipping file: file or folder changed!\n" if (!$silent);
         return;
    }
-  
+   
+   my $fold = $fname; #remember the old name and work on the new one
    $fname =~ tr/’/'/d if ( $matchString eq "'" && $fname =~m/’/ );    #apostrophe bug fix: ’ and ' are similar treat them as the same 
    
    my $size = (stat($fname))[7];
@@ -425,7 +426,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
    my $trans = $transU+$transD+$transWL; #add the bools together.. to speed up comparisons
 
    if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
-	    my $fold=$fname;  
+	    #my $fold=$fname;  
 
 	    if($renameFile){  #replace each file name with the same name with a unique number added to it
 	 	     #ex: foo_file.txt  -->  foobar 01.txt, foobar 02.txt, ... foobar n.txt
@@ -471,6 +472,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
       }elsif( open (my $FH,, $fold) ){ #lock, rename, and release the file
           _lock($FH); 
           eval { rename ($fold, $fname); };  #try to rename the old file to the new name
+          if ($@){ warn " >File rename error $fname: $@\n" if (!$silent); return; }
           _unlock($FH);
           close $FH;
       }
