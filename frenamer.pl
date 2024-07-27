@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.11 frenamer);
+my ($v,$progn)=qw(1.12.12 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -412,22 +412,19 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
         return;
    }
    
-   my $fold = $fname; #remember the old name and work on the new one
-   $fname =~ tr/’/'/d if ( $matchString eq "'" && $fname =~m/’/ );    #apostrophe bug fix: ’ and ' are similar treat them as the same 
-   
    my $size = (stat($fname))[7];
    $size = 0 if (! defined $size);                                    #fixes bug when existing file data fails to return from stat
-    return if ( $targetFilesize and  $size < $targetFilesize );       #if filesize too small
+   return if ( $targetFilesize and  $size < $targetFilesize );        #if filesize too small
 
    my @sizeType = formatSize($size . ""); undef $size;
-    return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
+   return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
    #end discard filenames filter
-   
-   my $trans = $transU+$transD+$transWL; #add the bools together.. to speed up comparisons
+
+   my $fold = $fname;                                                 #remember the old name and work on the new one
+   my $trans = $transU+$transD+$transWL;                              #add the bools together.. to speed up comparisons
+   $fname =~ tr/’/'/d if ( $matchString eq "'" && $fname =~m/’/ );    #apostrophe bug fix: ’ and ' are similar treat them as the same    
 
    if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
-	    #my $fold=$fname;  
-
 	    if($renameFile){  #replace each file name with the same name with a unique number added to it
 	 	     #ex: foo_file.txt  -->  foobar 01.txt, foobar 02.txt, ... foobar n.txt
 	 	     return if( $matchString ne "" && not $fname=~m/$matchString/ ); 
