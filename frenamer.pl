@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.18 frenamer);
+my ($v,$progn)=qw(1.12.18-1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -469,7 +469,7 @@ sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming pro
 	 
       if ($dryRun) { #dry run mode: display what the change will look like, update count then return
           ++$fcount;
-          print " Imagine " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
+          print " Imagine " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t " . "\"$fold\" to \"$fname\"\n" if (!$silent); 
           return;
       }elsif( open (my $FH,, $fold) ){ #lock, rename, and release the file
           _lock($FH); 
