@@ -88,7 +88,7 @@ sub cmdlnParm(){	#display the program usage info
                 [YB]yottabyte, [BB]brontobyte, [GPB]geopbyte
 	-[tu|td|tw]  Case translation: translate up, down, or uppercase the first letter for each word.
 	-dup         Find & delete duplicate files at folder location. 
-                Skip or choose which one to keep. Note: file sorting is not supported.
+	              Skip or choose which one to keep. Note: file sorting is not supported.
 	              Supports: Dry run, target file by extension, & force removes all files, but the 1st.
 	-silent      Silent mode-- suppress all warnings, force all changes, and omit displaying results
 	-h|help      Usage options.
