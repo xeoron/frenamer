@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.12 frenamer);
+my ($v,$progn)=qw(1.12.14 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -58,25 +58,26 @@ sub cmdlnParm(){	#display the program usage info
 	-d=/folder/path   Default "./" Directory to begin searching within.
 									
   optional:
-	-dr     Dry run mode test to see what will happen without committing changes to files.
-	-c      Confirm each file change before doing so.
-	-r      Recursively search the directory tree.
-	-fs     Follow symbolic links when recursive mode is on.
-	-v      Verbose: show settings and all files that will be changed.
-	-y      Force any changes without prompting: including overwriting a file.
-	-n      Do not overwrite any files, and do not ask.
-	-x      Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
-	-ns     Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
-	-ds     Delete .DS_Store files along the target location path in macOS. Dry run mode not supported.
-	-id     Filter: ignore changing directory names.
-	-tdn    Filter: target directory names, only.
-	-sa     Sequential append a number: Starting at 1 append the count number to a filename.
-	-sp     Sequential prepend a number: Starting at 1 prepend the count number to a filename.
-	-ts     Add the last modified timestamp to the filename. 
-	         This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
-	         Timestamp is prepended by default, but you can -sa instead.
+	-dr      Dry run mode test to see what will happen without committing changes to files.
+	-nosort  Turn off case insensitive file sorting before processing in dry-run mode.
+	-c       Confirm each file change before doing so.
+	-r       Recursively search the directory tree.
+	-fs      Follow symbolic links when recursive mode is on.
+	-v       Verbose: show settings and all files that will be changed.
+	-y       Force any changes without prompting: including overwriting a file.
+	-n       Do not overwrite any files, and do not ask.
+	-x       Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
+	-ns      Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
+	-ds      Delete .DS_Store files along the target location path in macOS. Dry run mode not supported.
+	-id      Filter: ignore changing directory names.
+	-tdn     Filter: target directory names, only.
+	-sa      Sequential append a number: Starting at 1 append the count number to a filename.
+	-sp      Sequential prepend a number: Starting at 1 prepend the count number to a filename.
+	-ts      Add the last modified timestamp to the filename. 
+	          This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
+	          Timestamp is prepended by default, but you can -sa instead.
 	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
-	-nosort      Turn off case insensitive file sorting before processing.
+	-nosort      Turn off case insensitive file sorting before processing in dry-run mode.
 	-rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
 	              Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	              Will replace all files, unless -f, -e, -tf, or -tst is set. 
@@ -151,7 +152,7 @@ EOD
 }#end cmdlnParm()
 
 
-sub ask($){                #ask the user a question. Parameters = $message
+sub ask($) {                #ask the user a question. Parameters = $message
  return 1 if ($force); # Yes do it, don't ask, if either case is true
  my($msg) = @_; my $answer = "";
   
@@ -162,7 +163,7 @@ sub ask($){                #ask the user a question. Parameters = $message
 }#end ask($)
 
 
-sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters = $currentFilename, $newFilename, @typeOf_FileSize
+sub confirmChange($$@) { 	#ask if pending change is good or bad. Parameters = $currentFilename, $newFilename, @typeOf_FileSize
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
   my ($currentf, $newf, @sizeType)=@_;  
   
@@ -170,7 +171,7 @@ sub confirmChange($$@){ 	#ask if pending change is good or bad. Parameters = $cu
 }#end confirmChage($)
 
 
-sub getPerms($){ 	#get file permisions in *nix format. Parameter = $file_to_lookup
+sub getPerms($) { 	#get file permisions in *nix format. Parameter = $file_to_lookup
 my ($file)=@_; 
  return "???" unless (-e $file && (-f $file || -d $file || -c $file) ); #does it exist? is a directory or file?
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
@@ -184,7 +185,7 @@ my ($file)=@_;
 } #end getPerms($)
 
 
-sub _makeUC($){ #make first char upper-case for regex. Parameters = $character
+sub _makeUC($) { #make first char upper-case for regex. Parameters = $character
  return uc ($_[0]); 
 } #end _makeUC($) 
 
@@ -194,7 +195,7 @@ sub _makeLC($) { #make first char lower-case for regex. Parameters = $character
 }#end _makeLC($)
 
 
-sub _transToken($){ # _transToken($) send a single character to be uppercased. Parameters = $character
+sub _transToken($) { # _transToken($) send a single character to be uppercased. Parameters = $character
  ($_) = @_; 
  my $TT=\&_makeUC; #Poiner method call trick for use within regex
   $_ = lc $_; #set the filename to be all lowercase
@@ -206,7 +207,7 @@ sub _transToken($){ # _transToken($) send a single character to be uppercased. P
 } #end _transToken($)
 
 
-sub _translateWL($){    #translate 1st letter of each word to uppercase. Parameters = $filename
+sub _translateWL($) {    #translate 1st letter of each word to uppercase. Parameters = $filename
  ($_) = @_;
   $_ = _transToken(($_[0]));
  my $MAKELOWER=\&_makeLC; #Pointer method call trick for use within regex
@@ -248,7 +249,7 @@ sub _translateWL($){    #translate 1st letter of each word to uppercase. Paramet
 } #end _translateWL($)
 
 
-sub _translate($){	#translate case either up or down. Parameter = $file
+sub _translate($) {	#translate case either up or down. Parameter = $file
   my ($name)=@_;
   	
    if ($name eq ""){ return ""; }
@@ -260,7 +261,7 @@ sub _translate($){	#translate case either up or down. Parameter = $file
 }#end _translate($)
 
 
-sub timeStamp($){ #Returns timestamp of filename. Parameter = $filename
+sub timeStamp($) { #Returns timestamp of filename. Parameter = $filename
 #display date info sortable format: "Year-Month-Day Hour:Minute:Second"
 
 my ($file)=@_; 
@@ -276,7 +277,7 @@ my ($file)=@_;
   return $fdate;  
 }#end timeStamp
 
-sub _sequential($){ #Append or prepend the file-count value to a name or last mod dateStamp. Parameter = $filename
+sub _sequential($) { #Append or prepend the file-count value to a name or last mod dateStamp. Parameter = $filename
 #This subroutine returns a filename or an empty string for failing to update the passed $filename
 # Prepend example 1: foo.txt  -> 01 foo.txt
 # Prepend example 2: foo.txt  -> 11-09-2014 11:42:16 foo.txt
@@ -318,7 +319,7 @@ sub _sequential($){ #Append or prepend the file-count value to a name or last mo
 } #end _sequential($)
 
 
-sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
+sub formatSize($) { #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
  my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB BB GPB)]);
@@ -334,12 +335,12 @@ sub formatSize($){ #find the filesize format type of a file: b, kb, mb, etc. Par
 } #end formatSize($)
 
 
-sub mySort(@){ #case insensitive sort sort a list of files Parameter = @files
+sub mySort(@) { #case insensitive sort sort a list of files Parameter = @files
   return sort { "\L$a" cmp "\L$b" } @_;
 }#end mySort(@)
 
 
-sub fRename($){ #file renaming... only call this when not crawling any subfolders. Parameter = $folder_to_look_at
+sub fRename($) { #file renaming... only call this when not crawling any subfolders. Parameter = $folder_to_look_at
  my ($dir)=@_; 
  my @files;
    return -1 if (! -d $dir); #skip path if not a valid directory name
@@ -355,18 +356,19 @@ sub fRename($){ #file renaming... only call this when not crawling any subfolder
    }
    #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
 
-   if ($noSort){ foreach ( @files ){ _rFRename($_); } }
-   else{ 
+   if ($dryRun && !$noSort){ 
         my %seen = ();
         my @uniquFiles = grep { ! $seen{$_} ++ } @files; #purge duplicate files in list
         foreach ( mySort(@uniquFiles) ){ _rFRename($_); } 
+   }else{ 
+        foreach ( @files ){ _rFRename($_); } 
    }
 
   return 1; 
 } #end frename($)
 
 
-sub _processFRename(%){ # sort hash of files then process files Parameter = (%) Hash ->$hashFile{$directory} = @filenames
+sub _processFRename(%) { # sort hash of files then process files Parameter = (%) Hash ->$hashFile{$directory} = @filenames
 # Driver for changing sorted file locations/names and launch processing filenames
  my (%hashFiles) = @_; 
  my $lastDir = Cwd::getcwd() . ""; 
@@ -399,7 +401,7 @@ sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
 }#end _unlock($)
 
 
-sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
+sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
   my ($fname) = @_;
   
    #if true discard the filename, else keep it
@@ -422,7 +424,9 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 
    my $fold = $fname;                                                 #remember the old name and work on the new one
    my $trans = $transU+$transD+$transWL;                              #add the bools together.. to speed up comparisons
-   $fname =~ tr/’/'/d if ( $matchString eq "'" && $fname =~m/’/ );    #apostrophe bug fix: ’ and ' are similar treat them as the same    
+
+   #apostrophe bug fix: ’ and ' are similar treat them as the same
+   $fname =~ tr/’/'/d if ( $matchString eq "'" && $fname =~m/’/ && !$noSanitize );
 
    if($rx || $rs || $fname=~m/$matchString/ || $trans || ($timeStamp or $sequentialAppend or $sequentialPrepend)){ #change name if
 	    if($renameFile){  #replace each file name with the same name with a unique number added to it
@@ -454,7 +458,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
       }
       
       return  if $fold eq $fname; #nothing has changed-- ignore quietly
-      
+
       if ( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
          ### mode to also show file size and age of current existing file
          return if ($noForce);	#dont want to force changes?
@@ -486,7 +490,7 @@ sub _rFRename($){ 	#recursive file renaming processing. Parameter = $filename
 } #end _rFRename($;$)
 
 
-sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
+sub intoBytes($) { #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
 #  byte      B
 #  kilobyte   KB  = 2**10 B = 1024 B
@@ -515,7 +519,7 @@ sub intoBytes($){ #Parameters = $"filesize+unitType" example 8.39GB, returns siz
 }#end intoBytes($)
 
 
-sub findDupelicateFiles(){
+sub findDupelicateFiles() {
 #------------------------------------------------------------
 # Based off of dupfinder v1: find duplicate files 
 # Source: http://www.perlmonks.org/?node_id=224748
@@ -593,38 +597,38 @@ my @group = $finder -> findDuplicates();
 }#end findDupelicateFiles()
 
 
-sub _untaintData ($$){	#dereference any reserved non-word characters. Parameter = string of data to untaint, flag
+sub _untaintData ($$) {	#dereference any reserved non-word characters. Parameter = string of data to untaint, flag
  	#flag: >0 run through all filters, <=0 omit some filters
  my ($flag,$s)= (pop @_, ""); ($_)=@_;
 
-   foreach (split //, $_) {		#tokenize and massage special characters
-	 if (/^(\W)$/){
-		if ($1 eq "("){ $_ =qw(\\\(); }
-		elsif ($1 eq ")"){ $_ =qw(\\\)); }
-		elsif ($1 eq "\^" && $flag){ $_ =qw(\\^); }
-		#elsif ($1 eq "\'" && $flag){ $_ = "\N{U+0027}"; } #<-- unicode for Apostraphe
-		elsif ($1 eq "\$" && $flag){ $_ =qw(\\$); }
-		elsif ($1 eq "\+" && $flag){ $_ =qw(\\+); }
-		elsif ($1 eq "\*" && $flag){ $_ =qw(\\*); }
-		elsif ($1 eq "\?" && $flag){ $_ =qw(\\?); }
-		elsif ($1 eq "\[" && $flag){ $_ =qw(\\[); }
-		elsif ($1 eq "\]" && $flag){ $_ =qw(\\]); }
-		elsif ($1 eq "\." && $flag){ $_ =qw(\\.); }
-		elsif ($1 eq "|" && $flag){ $_ =qw(\\|); }
-		elsif ($1 eq "\\"){ $_ ="\\" . "\\";}
-		elsif ($1 eq "/"){ $_ =qw(\\/);}
-		elsif ($1 eq "\!"&& $flag){ $_ =qw(\\!); }
-	 }
-	 $s.=$_;
+  foreach (split //, $_) {		#tokenize and massage special characters
+    if (/^(\W)$/){
+       if ($1 eq "("){ $_ =qw(\\\(); }
+       elsif ($1 eq ")"){ $_ =qw(\\\)); }
+       elsif ($1 eq "\^" && $flag){ $_ =qw(\\^); }
+       #elsif ($1 eq "\'" && $flag){ $_ = "\N{U+0027}"; } #<-- unicode for Apostraphe
+       elsif ($1 eq "\’" && $flag){ $_ =qw(\\'); }   #convert ’ to '
+       elsif ($1 eq "\$" && $flag){ $_ =qw(\\$); }
+       elsif ($1 eq "\+" && $flag){ $_ =qw(\\+); }
+       elsif ($1 eq "\*" && $flag){ $_ =qw(\\*); }
+       elsif ($1 eq "\?" && $flag){ $_ =qw(\\?); }
+       elsif ($1 eq "\[" && $flag){ $_ =qw(\\[); }
+       elsif ($1 eq "\]" && $flag){ $_ =qw(\\]); }
+       elsif ($1 eq "\." && $flag){ $_ =qw(\\.); }
+       elsif ($1 eq "|"  && $flag){ $_ =qw(\\|); }
+       elsif ($1 eq "\\"){ $_ ="\\" . "\\";}
+       elsif ($1 eq "/"){ $_ =qw(\\/);}
+       elsif ($1 eq "\!" && $flag){ $_ =qw(\\!); }
+	  }
+	  $s.=$_;  #put the chars back together into word(s)
   }#end foreach
   return $s;
 }#end _untaintData($)
 
-sub untaintData(){					#sanitize provided input data
+sub untaintData() {					#sanitize provided input data
    return if $noSanitize || $rx;	#don't treat regular expressions or when asked to turn sanitize mode off
    $matchString=_untaintData($matchString,1);
    $replaceMatchWith=_untaintData($replaceMatchWith,0);
-
 }#end untaintData()
 
 sub showUsedOptions() {
@@ -664,7 +668,7 @@ sub showUsedOptions() {
    }else { untaintData(); }
 }#end showUsedOptions()
 
-sub prepData(){  # prep Data settings before the program does the real work.
+sub prepData() {  # prep Data settings before the program does the real work.
    $force++ 		if $silent; #if silent-mode is on, then activate force-mode
    $noSanitize++ 	if $rx;	#don't treat regular expressions
 
@@ -725,7 +729,7 @@ sub prepData(){  # prep Data settings before the program does the real work.
 }#end prepData()
 
 
-sub main(){
+sub main() {
   #Setup settings and messages
    cmdlnParm() 	    if ($version || $help || ($matchString eq "" && 
                        (!$transU && !$transD && !$transWL && !$renameFile &&
@@ -737,12 +741,7 @@ sub main(){
  #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
        findDupelicateFiles();
-   }elsif ($noSort){ #no sort recursively traverse the filesystem?
-       if ($rs){ 
-          if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links? Can't sort with follow flag
-          else{ File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
-       }else{ fRename($startDir); }
-   }elsif ($rs || $fs){ #recursively traverse the filesystem?
+   }elsif ( ($dryRun && !$noSort) && ($rs || $fs) ){ #Sort only dryRun mode & recursively traverse the filesystem?
        my %hashFiles = (); # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
        if ($fs) { #follow symbolic links? 
             File::Find::find( {wanted=> sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, follow=>1} , $startDir ); 
@@ -753,6 +752,9 @@ sub main(){
             #use Data::Dumper; print "follow recursive sort\n"; print Dumper(%hashFiles); exit 0;
             _processFRename( %hashFiles ); #process file tree
        } #follow folders within folders
+   }elsif ($rs){ #no sort recursively traverse the filesystem?
+       if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links? Can't sort with follow flag
+       else{ File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
    }else{ fRename($startDir); }  #only look at the given base folder
      
    if(!$silent && $dryRun or $verbose){

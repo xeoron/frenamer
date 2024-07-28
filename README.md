@@ -44,13 +44,13 @@ usage
    Options
    
     -dr       Dry run mode tests to see what will happen without committing changes.
+    -nosort   Turn off case insensitive file sorting before processing in dry-run mode.
     -c        Confirm each file change before doing so.    
     -r        Recursively search the directory tree.
     -fs       Follow symbolic links when recursive mode is on.
     -dup      Find & delete duplicate files at folder location. Skip or choose which one to keep.
                Skip or choose which one to keep. Note: file sorting is not supported.
                Supports: Dry run, target file by extension, & force removes all files, but the 1st.
-    -nosort   Turn off case insensitive file sorting before processing.
     -v        Verbose: show settings and all files that will be changed.
     -tu       Case translation: Upper case.
     -td       Case translation: Down to lower case.
