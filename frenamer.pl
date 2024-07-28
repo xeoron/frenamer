@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.17-2 frenamer);
+my ($v,$progn)=qw(1.12.18 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -388,6 +388,7 @@ sub _processFRename(%) { # sort hash of files then process files Parameter = (%)
     }
 }#end _processFRename(%)
 
+
 sub _lock ($) {  #Parameter = expects a filehandle reference to lock a file
   my ($FH)=@_;
    until (flock($FH, LOCK_EX)){ sleep .10; }
@@ -400,7 +401,7 @@ sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
 }#end _unlock($)
 
 
-sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
+sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming processing.
   my ($fname) = @_;
   
    #if true discard the filename, else keep it
@@ -468,7 +469,7 @@ sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
 	 
       if ($dryRun) { #dry run mode: display what the change will look like, update count then return
           ++$fcount;
-          print " Change " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
+          print " Imagine " . getPerms($fold) . " " . Cwd::getcwd() . SLASH . " " . join ("", @sizeType) . "\n\t" . "\"$fold\" to \"$fname\"\n" if (!$silent); 
           return;
       }elsif( open (my $FH,, $fold) ){ #lock, rename, and release the file
           _lock($FH); 
@@ -492,7 +493,7 @@ sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
 
 sub intoBytes($) { #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
  my ($size) =@_;
-#  byte      B
+#  byte       B
 #  kilobyte   KB  = 2**10 B = 1024 B
 #  megabyte   MB  = 2**20 B = 1024 * 1024 B
 #  gigabyte   GB  = 2**30 B = 1024 * 1024 * 1024 B
