@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.18-1 frenamer);
+my ($v,$progn)=qw(1.12.19 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -59,9 +59,9 @@ sub cmdlnParm(){	#display the program usage info
 									
   optional:
 	-dr      Dry run mode test to see what will happen without committing changes to files.
-	-nosort  Turn off case insensitive file sorting before processing in dry-run mode.
+	-nosort  Turn off case insensitive file sorting before processing in dry-run & -sp mode.          
 	-c       Confirm each file change before doing so.
-	-r       Recursively search the directory tree.
+	-r       Recursively search the directory tree. Not supported under -nosort mode.
 	-fs      Follow symbolic links when recursive mode is on.
 	-v       Verbose: show settings and all files that will be changed.
 	-y       Force any changes without prompting: including overwriting a file.
@@ -355,7 +355,7 @@ sub fRename($) { #file renaming... only call this when not crawling any subfolde
    }
    #if ($verbose && !$silent){ print " Working file List:\n  \'" . join (",\' ", @files) . "\n\n"; }  #for debugging
 
-   if ($dryRun && !$noSort){ 
+   if (($dryRun || $sequentialPrepend) && !$noSort){ 
         my %seen = ();
         my @uniquFiles = grep { ! $seen{$_} ++ } @files; #purge duplicate files in list
         foreach ( mySort(@uniquFiles) ){ _rFRename($_); } 
@@ -379,13 +379,14 @@ sub _processFRename(%) { # sort hash of files then process files Parameter = (%)
     for my $dir (mySort(keys %hashFiles)){ 
         my %seen = ();
         @fvalues = grep { ! $seen{$_} ++ } (mySort( @{ $hashFiles{$dir} } )); #sort and purge duplicate files in the list
-        
-        #@fvalues uniqu = grep { ! $seen{$_} ++ } @list;
+        #use Data::Dumper; print "-->\%hash\n"; print Dumper(%seen); print "-->\@fvalues\n"; print Dumper(@fvalues); exit 0;
         chdir ($dir) if ($dir ne $lastDir); #if directory changed
-        foreach (@fvalues){ _rFRename($_) if ($_ ne "." || $_ ne ".."); }  #process filename
+        
+        for (@fvalues){ _rFRename($_) if ($_ ne "." || $_ ne ".."); }  #process filename
         $lastDir = $dir;
         @fvalues = undef; #reset
     }
+
 }#end _processFRename(%)
 
 
@@ -604,7 +605,7 @@ sub _untaintData ($$) {	#dereference any reserved non-word characters. Parameter
 
   foreach (split //, $_) {		#tokenize and massage special characters
     if (/^(\W)$/){
-       if ($1 eq "("){ $_ =qw(\\\(); }
+       if ($1 eq "(") { $_ =qw(\\\(); }
        elsif ($1 eq ")"){ $_ =qw(\\\)); }
        elsif ($1 eq "\^" && $flag){ $_ =qw(\\^); }
        #elsif ($1 eq "\'" && $flag){ $_ = "\N{U+0027}"; } #<-- unicode for Apostraphe
@@ -620,9 +621,9 @@ sub _untaintData ($$) {	#dereference any reserved non-word characters. Parameter
        elsif ($1 eq "\\"){ $_ ="\\" . "\\";}
        elsif ($1 eq "/"){ $_ =qw(\\/);}
        elsif ($1 eq "\!" && $flag){ $_ =qw(\\!); }
-	  }
-	  $s.=$_;  #put the chars back together into word(s)
-  }#end foreach
+    } #end if
+    $s.=$_;  #put the chars back together into word(s)
+  } #end foreach
   return $s;
 }#end _untaintData($)
 
@@ -698,14 +699,12 @@ sub prepData() {  # prep Data settings before the program does the real work.
            $sequentialAppend = 0;  # add the end of name
            $sequentialPrepend = 1; # add to the beginning
        }
-       $rs = 0 if ($noSort); #disable, since it does not reset the number-count when going into each new folder
+   	   $rs = 0;# if ($noSort); #disable, since it does not reset the number-count when going into each new folder
    }elsif (!$timeStamp && $sequentialAppend or $sequentialPrepend) { #if -sa or -sp disable -r mode
-       $rs = 0 if ($noSort); #disable, since it does not reset the number-count when going into each new folder 
-   }elsif ($timeStamp && $sequentialAppend){
-   		$sequentialPrepend = 0;
-   }elsif ($timeStamp){
-   	   $sequentialPrepend = 1;
-   }
+       #disable, since it does not reset the number-count when going into each new folder 
+   	   $rs = 0 if ($noSort); 
+   }elsif ($timeStamp && $sequentialAppend){ $sequentialPrepend = 0; }
+    elsif ($timeStamp){ $sequentialPrepend = 1; }
    
    if (($force and $renameFile) or ($renameFile and $extension and !($renameFile =~m/$extension$/i)) and 
        ask(" The replacement filename \"$renameFile\" is missing an extension: Should it to be of filetype \"$extension\"? ") 
@@ -742,20 +741,22 @@ sub main() {
  #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
        findDupelicateFiles();
-   }elsif ( ($dryRun && !$noSort) && ($rs || $fs) ){ #Sort only dryRun mode & recursively traverse the filesystem?
+   }elsif ( ($sequentialPrepend   && !$noSort) || 
+            ($dryRun && !$noSort) && ($rs || $fs) ){ #Sort only dryRun mode & recursively traverse the filesystem?
        my %hashFiles = (); # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
        if ($fs) { #follow symbolic links? 
             File::Find::find( {wanted=> sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, follow=>1} , $startDir ); 
             #use Data::Dumper; print "follow sorted sym links mode\n"; print Dumper(%hashFiles); #exit 0;
             _processFRename( %hashFiles ); #process file tree
-       }else{ # recursive
+       }elsif ($rs) { # recursive
             File::Find::finddepth( sub { push(@{ $hashFiles{Cwd::getcwd() . ""} }, "$_"); }, $startDir ); #build a file tree
             #use Data::Dumper; print "follow recursive sort\n"; print Dumper(%hashFiles); exit 0;
             _processFRename( %hashFiles ); #process file tree
-       } #follow folders within folders
-   }elsif ($rs){ #no sort recursively traverse the filesystem?
+       }else { fRename($startDir); } #look at only names of files within $startDir folder
+   }elsif ($rs || $fs){ #no sort recursively traverse the filesystem?
        if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links? Can't sort with follow flag
-       else{ File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
+       else { File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
+       #else { fRename($startDir); } #look at only names of files within $startDir folder
    }else{ fRename($startDir); }  #only look at the given base folder
      
    if(!$silent && $dryRun or $verbose){
