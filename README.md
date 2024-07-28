@@ -63,8 +63,8 @@ usage
                Note: this is turned off when -x mode is active.
     -ds       Delete .DS_Store files along the target location path in macOS. 
                Dry run mode not supported.
-    -id       Filter: Ignore changing directory names.
-    -tdn      Filter: target directory names, only.
+    -id       Filter: ignore changing directory names, thus target only files.
+    -if       Filter: ignore changing file names, thus target only directories.
     -e=xxx    Filter: target only files with file extension XXX
     -tf=xxx   Filter: target files by filesize that are at least X big. 
                Example: 1b, 10.24kb, or 42.02mb.

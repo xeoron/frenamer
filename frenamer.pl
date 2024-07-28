@@ -16,25 +16,25 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.13.0 frenamer);
+my ($v,$progn)=qw(1.14.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
-    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
-    $targetFilesize,$targetSizetype, $dsStore, $noSort, $duplicateFiles)
-	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, 0, "","", 0,0, 0);
+    $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
+    $targetFilesize,$targetSizetype, $dsStore, $noSort, $duplicateFiles, $skipFiles)
+	=(0, 0, 0, 0, "", "", qw(.), 0, 0, "", "", 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, "", 0, 0, 0, "","", 0,0,0,0);
 
 
 GetOptions(
 	   "f=s"  =>\$matchString,       "tu" =>\$transU,         "d=s"     =>\$startDir,
-	   "s:s"  =>\$replaceMatchWith,  "td" =>\$transD,         "v"       =>\$verbose,
+	   "s:s"  =>\$replaceMatchWith,  "td" =>\$transD,         "nosort"  =>\$noSort,
 	   "c"    =>\$confirm,           "r"  =>\$rs,             "version" =>\$version,
 	   "fs"   =>\$fs,                "x"  =>\$rx,             "h|help"  =>\$help,
 	   "y"    =>\$force,             "n"  =>\$noForce,        "silent"  =>\$silent,
 	   "e=s"  =>\$extension,         "ns" =>\$noSanitize,     "sa"      =>\$sequentialAppend,
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
-	   "rf=s" =>\$renameFile,        "id" =>\$idir,           "sn:s"    =>\$startCount,
-	   "ts"   =>\$timeStamp,         "tdn"=>\$targetDirName,  "tfu:s"   =>\$targetSizetype,
-	   "tf:s" =>\$targetFilesize,    "ds" =>\$dsStore,        "nosort"  =>\$noSort,
+	   "rf=s" =>\$renameFile,        "id" =>\$skipDir,        "sn:s"    =>\$startCount,
+	   "ts"   =>\$timeStamp,         "if" =>\$skipFiles,      "tfu:s"   =>\$targetSizetype,
+	   "tf:s" =>\$targetFilesize,    "ds" =>\$dsStore,        "v"  =>\$verbose,
 	   "dup"  =>\$duplicateFiles);
 	    
 $SIG{INT} = \&sig_handler;
@@ -70,8 +70,8 @@ sub cmdlnParm(){	#display the program usage info
 	-x       Toggle on user defined regular expression mode. Set -f for substitution: -f='s/bar/foo/'
 	-ns      Do not sanitize find and replace data. Note: this is turned off when -x mode is active.
 	-ds      Delete .DS_Store files along the target location path in macOS. Dry run mode not supported.
-	-id      Filter: ignore changing directory names.
-	-tdn     Filter: target directory names, only.
+	-id      Filter: ignore changing directory names, thus target only files.
+	-if      Filter: ignore changing file names, thus target only directories.
 	-sa      Sequential append a number: Starting at 1 append the count number to a filename.
 	-sp      Sequential prepend a number: Starting at 1 prepend the count number to a filename.
 	-ts      Add the last modified timestamp to the filename. 
@@ -291,7 +291,7 @@ sub _sequential($) { #Append or prepend the file-count value to a name or last m
   if ($timeStamp){
       $value = timeStamp($fname);
   } else {
-      return "" if -d $fname; #when appending a number to a file, skip folders
+      return "" if (-d $fname && $skipDir);   #when appending a number to a file, skip folders
       $value = sprintf("%002d", $fcount + 1); #insert 0 before 1->9, therefore 1 is 01
   }
 
@@ -359,11 +359,10 @@ sub fRename($) { #file renaming... only call this when not crawling any subfolde
    if (($dryRun || $sequentialPrepend) && !$noSort){ 
         my %seen = ();
         my @uniquFiles = grep { ! $seen{$_} ++ } @files; #purge duplicate files in list
-        foreach ( mySort(@uniquFiles) ){ _rFRename($_); } 
-   }else{ 
-        foreach ( @files ){ _rFRename($_); } 
-   }
+        @files = mySort(@uniquFiles);     
+   } 
 
+   foreach ( @files ){ _rFRename($_); }
   return 1; 
 } #end frename($)
 
@@ -405,17 +404,20 @@ sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
 
 sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming processing.
   my ($fname) = @_;
-  
+
    #if true discard the filename, else keep it
    return if( $fname=~m/^(\.|\.\.|\.DS_Store)$/ or                    #if a dot file or macOS .DS_Store
              ($extension and $fname !~m/(\.$extension)$/i) or         #discard all non-matching filename extensions
-             ($idir && -d $fname) or (-d $fname && $renameFile)       #if ignore changing folder-names    
-            );                                                        #if yes to any, then move along
+             (-d $fname && $renameFile) or                            #if ignore changing folder-names
+             ($skipFiles && -f $fname ) or                            #if ignore changing file names
+             ($skipDir && -d $fname )                                 #if ignore changing folder names
+            );                                                        #Get next file if yes to any
+
    if ( !(-w $fname) ) {                                              #if not writable, then move along
         print " --> " . Cwd::getcwd() . SLASH . "$fname is not writable/findable. Skipping file: file or folder changed!\n" if (!$silent);
         return;
    }
-   
+
    my $fold = $fname;                                                 #remember the old name and work on the new one
    my $trans = $transU+$transD+$transWL;                              #add the bools together.. to speed up comparisons
 
@@ -450,7 +452,7 @@ sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming pro
               }
           }
       }
-      
+
       return  if $fold eq $fname;                                              #nothing has changed-- ignore quietly
 
       my ($size, @sizeType) = ("", ());
@@ -643,8 +645,8 @@ sub showUsedOptions() {
 	 print "-->Data sanitized { search for: '$matchString'\t\t-->replace with: '$replaceMatchWith' }\n" if !$noSanitize;
 	 print "-->Start location: $startDir\n";
 	 print "-->Follow symbolic links\n" if($fs);
-	 print "-->Ignore changing directory names\n" if($idir);
-	 print "-->Targeting only directory names\n" if($targetDirName);
+	 print "-->Ignore changing directory names\n" if($skipDir);
+	 print "-->Ignore changing file names\n" if($skipFiles);
 	 print "-->Targeting only filesize type $targetSizetype\n" if($targetSizetype);
 	 print "-->Targeting only files of at least size $targetFilesize -> " . intoBytes($targetFilesize) ." bytes\n" if($targetFilesize);
 	 print "-->Confirm changes\n" if($confirm);
@@ -739,7 +741,7 @@ sub main() {
                     );
    prepData();
 
- #Everything is setup, now start looking for files to work with
+   #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
        findDupelicateFiles();
    }elsif ( ($sequentialPrepend   && !$noSort) || 
