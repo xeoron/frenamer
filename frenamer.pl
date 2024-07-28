@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.16 frenamer);
+my ($v,$progn)=qw(1.12.17 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -413,14 +413,6 @@ sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
         return;
    }
    
-   my $size = (stat($fname))[7];
-   $size = 0 if (! defined $size);                                    #fixes bug when existing file data fails to return from stat
-   return if ( $targetFilesize and  $size < $targetFilesize );        #if filesize too small
-
-   my @sizeType = formatSize($size . ""); undef $size;
-   return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
-   #end discard filenames filter
-
    my $fold = $fname;                                                 #remember the old name and work on the new one
    my $trans = $transU+$transD+$transWL;                              #add the bools together.. to speed up comparisons
 
@@ -456,7 +448,16 @@ sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
           }
       }
       
-      return  if $fold eq $fname; #nothing has changed-- ignore quietly
+      return  if $fold eq $fname;                                              #nothing has changed-- ignore quietly
+
+      my ($size, @sizeType) = ("", ());
+      if (($dryRun || $verbose) && !$silent){  #gather file meta-data for displaying
+          $size = (stat($fold))[7];                                            #size in bytes
+          $size = 0 if (! defined $size);                                      #fixes rare bug when existing file data fails to return from stat
+          return if ( $targetFilesize and $size < $targetFilesize );           #if filesize too small
+          @sizeType = formatSize($size . ""); undef $size;
+          return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
+      }
 
       if ( !$force  && ($confirm || -e $fname) ) {### does a file exist with that same "new" filename? should it be overwritten?
          ### mode to also show file size and age of current existing file
@@ -683,7 +684,7 @@ sub prepData() {  # prep Data settings before the program does the real work.
    if ($dsStore) { #purge .DS_Store files in macOS
        use English qw' -no_match_vars ';
        if ( $OSNAME eq "darwin" ){ #target only macOS
-           print "Purging .DS_Store files at $startDir\n" if ($verbose && !$silent);
+           print "Purging .DS_Store files at $startDir\n" if (($dryRun || $verbose) && !$silent);
            qx\find "$startDir" -name .DS_Store -type f -delete\;
        }
    }
