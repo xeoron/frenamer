@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.17 frenamer);
+my ($v,$progn)=qw(1.12.17-2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -334,7 +334,7 @@ sub formatSize($) { #find the filesize format type of a file: b, kb, mb, etc. Pa
 } #end formatSize($)
 
 
-sub mySort(@) { #case insensitive sort sort a list of files Parameter = @files
+sub mySort(@) { #case insensitive sort: sort a list of files Parameter = @files
   return sort { "\L$a" cmp "\L$b" } @_;
 }#end mySort(@)
 
@@ -452,7 +452,7 @@ sub _rFRename($) { 	#recursive file renaming processing. Parameter = $filename
 
       my ($size, @sizeType) = ("", ());
       if (($dryRun || $verbose) && !$silent){  #gather file meta-data for displaying
-          $size = (stat($fold))[7];                                            #size in bytes
+          $size = (stat($fold))[7];                                            
           $size = 0 if (! defined $size);                                      #fixes rare bug when existing file data fails to return from stat
           return if ( $targetFilesize and $size < $targetFilesize );           #if filesize too small
           @sizeType = formatSize($size . ""); undef $size;
