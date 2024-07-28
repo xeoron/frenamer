@@ -2,6 +2,7 @@
 =comment
  Authors: Jason Campisi, and includes duplicate file finding code by Antonio Bellezza
  Date: 9.29.2007 -> 2024
+ Repository: https://github.com/xeoron/frenamer
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
  Tested on perl v5.X built for Linux and macOS
@@ -15,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.19 frenamer);
+my ($v,$progn)=qw(1.13.0 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
