@@ -15,7 +15,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.12.15 frenamer);
+my ($v,$progn)=qw(1.12.16 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $idir, $timeStamp, $targetDirName,
@@ -683,7 +683,7 @@ sub prepData() {  # prep Data settings before the program does the real work.
    if ($dsStore) { #purge .DS_Store files in macOS
        use English qw' -no_match_vars ';
        if ( $OSNAME eq "darwin" ){ #target only macOS
-           print "Purging .DS_Store files at $startDir\n" if (!$silent);
+           print "Purging .DS_Store files at $startDir\n" if ($verbose && !$silent);
            qx\find "$startDir" -name .DS_Store -type f -delete\;
        }
    }
@@ -733,7 +733,7 @@ sub main() {
    cmdlnParm() 	    if ($version || $help || ($matchString eq "" && 
                        (!$transU && !$transD && !$transWL && !$renameFile &&
                         !$timeStamp && !$sequentialAppend && !$sequentialPrepend &&
-                        !$duplicateFiles))
+                        !$duplicateFiles && !$dsStore))
                     );
    prepData();
 
