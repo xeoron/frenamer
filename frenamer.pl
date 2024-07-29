@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.0 frenamer);
+my ($v,$progn)=qw(1.14.1 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -121,7 +121,7 @@ sub cmdlnParm(){	#display the program usage info
 
     	Rename all jpg files to "Vacation" with a sequential number prepended to each file. 
         Next, include the files last modified timestamp appended to the name.
-    		$progn -rf="Vacation" -sp -e=jpg && $progn -ts -sa -f="Vacation" -e=jpg
+    		$progn -rf="Vacation" -sp -e=jpg $progn -ts -sa -f="Vacation" -e=jpg
     		file: 2345234.jpg          result: 01 Vacation 2013-06-14 20:16:53.jpg
     		file: 2345235.jpg          result: 02 Vacation 2013-06-14 20:18:24.jpg
     		...
@@ -272,7 +272,7 @@ my ($file)=@_;
 
  use POSIX ();
   my $fdate=POSIX::strftime("%Y-%m-%d", localtime($ctime)) . " $hour:$min:$sec" || "timeStampError";
-  print " datestamp: $file -> $fdate\n" if ($verbose);
+  print " Datestamp: $file -> $fdate\n" if ($verbose && !$dryRun && !$confirm);
   
   return $fdate;  
 }#end timeStamp
@@ -404,11 +404,9 @@ sub _unlock($) { #Parameter = expects a filehandle reference to unlock a file
 
 sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming processing.
   my ($fname) = @_;
-
    #if true discard the filename, else keep it
    return if( $fname=~m/^(\.|\.\.|\.DS_Store)$/ or                    #if a dot file or macOS .DS_Store
              ($extension and $fname !~m/(\.$extension)$/i) or         #discard all non-matching filename extensions
-             (-d $fname && $renameFile) or                            #if ignore changing folder-names
              ($skipFiles && -f $fname ) or                            #if ignore changing file names
              ($skipDir && -d $fname )                                 #if ignore changing folder names
             );                                                        #Get next file if yes to any
@@ -744,7 +742,7 @@ sub main() {
    #Everything is setup, now start looking for files to work with
    if ($duplicateFiles){
        findDupelicateFiles();
-   }elsif ( ($sequentialPrepend   && !$noSort) || 
+   }elsif ( $renameFile ne "" || ($sequentialPrepend   && !$noSort) || 
             ($dryRun && !$noSort) && ($rs || $fs) ){ #Sort only dryRun mode & recursively traverse the filesystem?
        my %hashFiles = (); # $hashFile{$directory} = @filenames Hash of file location keys that point to arrays of file names 
        if ($fs) { #follow symbolic links? 
