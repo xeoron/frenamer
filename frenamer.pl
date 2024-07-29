@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.2 frenamer);
+my ($v,$progn)=qw(1.14.3 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -60,9 +60,9 @@ sub cmdlnParm(){	#display the program usage info
 									
   optional:
 	-dr      Dry run mode test to see what will happen without committing changes to files.
-	-nosort  Turn off case insensitive file sorting before processing in dry-run, -sp, -sa & -rf mode.          
+	-nosort  Turn off case insensitive file sorting before processing in dry-run, -sp, -sa & -rf mode. 
 	-c       Confirm each file change before doing so.
-	-r       Recursively search the directory tree. Not supported under -nosort mode.
+	-r       Recursively search the directory tree. Not supported under -nosort & -rf mode.
 	-fs      Follow symbolic links when recursive mode is on.
 	-v       Verbose: show settings and all files that will be changed.
 	-y       Force any changes without prompting: including overwriting a file.
