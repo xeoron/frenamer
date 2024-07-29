@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.3 frenamer);
+my ($v,$progn)=qw(1.14.4 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -34,7 +34,7 @@ GetOptions(
 	   "dr"   =>\$dryRun,            "tw" =>\$transWL,        "sp"      =>\$sequentialPrepend,
 	   "rf=s" =>\$renameFile,        "id" =>\$skipDir,        "sn:s"    =>\$startCount,
 	   "ts"   =>\$timeStamp,         "if" =>\$skipFiles,      "tfu:s"   =>\$targetSizetype,
-	   "tf:s" =>\$targetFilesize,    "ds" =>\$dsStore,        "v"  =>\$verbose,
+	   "tf:s" =>\$targetFilesize,    "ds" =>\$dsStore,        "v"       =>\$verbose,
 	   "dup"  =>\$duplicateFiles);
 	    
 $SIG{INT} = \&sig_handler;
