@@ -44,7 +44,8 @@ usage
    Options
    
     -dr       Dry run mode tests to see what will happen without committing changes.
-    -nosort   Turn off case insensitive file sorting before processing in dry-run mode & -sp mode.
+    -nosort   Turn off case insensitive file sorting before processing in 
+               dry-run mode, -sp, -sa & -rf mode.
     -c        Confirm each file change before doing so.    
     -r        Recursively search the directory tree. Not supported under -nosort mode.
     -fs       Follow symbolic links when recursive mode is on.

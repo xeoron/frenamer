@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.1 frenamer);
+my ($v,$progn)=qw(1.14.2 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -60,7 +60,7 @@ sub cmdlnParm(){	#display the program usage info
 									
   optional:
 	-dr      Dry run mode test to see what will happen without committing changes to files.
-	-nosort  Turn off case insensitive file sorting before processing in dry-run & -sp mode.          
+	-nosort  Turn off case insensitive file sorting before processing in dry-run, -sp, -sa & -rf mode.          
 	-c       Confirm each file change before doing so.
 	-r       Recursively search the directory tree. Not supported under -nosort mode.
 	-fs      Follow symbolic links when recursive mode is on.
@@ -490,7 +490,7 @@ sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming pro
 	 
    }#end change filename if clause
  return;   
-} #end _rFRename($;$)
+} #end _rFRename($)
 
 
 sub intoBytes($) { #Parameters = $"filesize+unitType" example 8.39GB, returns size in bytes or -1 if fails
