@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.5 frenamer);
+my ($v,$progn)=qw(1.14.6 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -768,7 +768,7 @@ sub main() {
        }
        my $msg="";
        if($dryRun){ 
-            if($duplicateFiles){ $msg="Total Duplicate Sets Found"; }
+            if($duplicateFiles){ $msg="Duplicate Sets Found"; }
             else { $msg="Purposed Changed Files"; }
        }else{ $msg="Changed Files"; }
        print "Total " . $msg . ": $fcount\n";
