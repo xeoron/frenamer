@@ -11,12 +11,11 @@ to share the same while only differing by a sequential number, remove .DS_Store 
 changes will be made without making them, to search recursively through the file-system, ignore changing folder names, and 
 even target files by file-extension. File renaming or dry run mode is designed for speed and care.
 
-The duplicate file handler is designed to be fast and scale for data centre usage using min of memory to find dupicate files. 
-It rules out a file as fast as possible by only comparing files with similar sizes >0, then via random sample lines throughout a 
-file, and only as last resort compares 2 whole files storing a match in a hash. 
+The duplicate file handler is designed to be fast and scale for data centre usage using the min of memory to find dupicates. 
+It does this by ruleing out files as fast as possible and only last resort compare whole file against each other.
 
-This is Perl based program that works best on *nix based systems, such as Linux, OpenBSD, and macOS, 
-Note: It can run on Microsoft Windows, but is not fine-tuned for it.
+This is Perl based program that works best on *nix based systems, such as Linux, *BSD, and macOS. It can run on Microsoft Windows, 
+but is not fine-tuned for it.
 
 to install
 =====
