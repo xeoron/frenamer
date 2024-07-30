@@ -1,8 +1,9 @@
 frenamer (file renamer)
 ========
-It is time to evolve the rename program that *nix based systems use. Linux has one called, "rename", created by Larry Wall 
-and it's lacking features to better manage bulk renaming of files and folders; and has not changed in over a decade. 
-You deserve something better. We all do!
+It is time to evolve the rename program that *nix based systems use & give Windows one. Linux comes with one called, "rename". 
+It's only a few lines of powerful code; yet it's lacking features for decades. For all systen there are now many GUI 
+bulk file renamer apps since the creation of frenamer, yet they are slower and lack some of the powerful features 
+frenamer provides. You deserve something better. We all do!
 
 frenamer makes it easy to find/manage duplicate files, and rename many files/folders using pattern matching by keywords 
 or by using regex. It, also, includes features for case translation, along with word detection, force or confirm changes, 
@@ -11,7 +12,7 @@ to share the same while only differing by a sequential number, remove .DS_Store 
 changes will be made without making them, to search recursively through the file-system, ignore changing folder names, and 
 even target files by file-extension. File renaming or dry run mode is designed for speed and care.
 
-The duplicate file handler is designed to be fast and scale for data centre usage using the min of memory to find dupicates. 
+The duplicate file handler is designed to be fast and scale for data centre usage using the minimum of memory to find dupicates. 
 It does this by ruleing out files as fast as possible and only last resort compare whole file against each other.
 
 This is Perl based program that works best on *nix based systems, such as Linux, *BSD, and macOS. It can run on Microsoft Windows, 
