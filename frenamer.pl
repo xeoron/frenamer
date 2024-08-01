@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.6 frenamer);
+my ($v,$progn)=qw(1.14.7 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -78,7 +78,7 @@ sub cmdlnParm(){	#display the program usage info
 	          This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
 	          Timestamp is prepended by default, but you can -sa instead.
 	-sn=xxx      Set the start-number count for -sa, -sp, or -rf mode to any integer > 0.
-	-rf=xxx      Completely replace filenames with this phrase & add a incrementing number to it.
+	-rf=xxx      Completely replace filenames with this phrase & with a incrementing number added to it.
 	              Only targets files within a folder, defaults to -sa but can -sp, option -r is disabled,
 	              Will replace all files, unless -f, -e, -tf, or -tst is set. 
 	-e=xxx       Filter target only files with file extension XXX

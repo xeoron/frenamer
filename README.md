@@ -77,7 +77,7 @@ usage
     -ts       Add the last modified timestamp to the filename. 
                This is in the name sortable format "Year-Month-Day Hour:Minute:Second"
                Timestamp is prepended by default, but you can -sa instead.
-    -rf=xxx	  Completely replace filenames with this phrase & add incrementing number to it.
+    -rf=xxx	   Completely replace filenames with this phrase & with a incrementing number added to it.
                Only targets files within a folder.
                Defaults to -sa but can -sp, option -r is disabled, and
                will replace all files, unless -f, -e, -tf, or -tst is set.
