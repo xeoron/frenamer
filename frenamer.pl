@@ -628,7 +628,7 @@ sub _untaintData ($$) {	#dereference any reserved non-word characters. Parameter
   return $s;
 }#end _untaintData($)
 
-sub untaintData() {					#sanitize provided input data
+sub untaintData() { #sanitize provided input data
    return if $noSanitize || $rx;	#don't treat regular expressions or when asked to turn sanitize mode off
    $matchString=_untaintData($matchString,1);
    $replaceMatchWith=_untaintData($replaceMatchWith,0);
@@ -757,7 +757,6 @@ sub main() {
    }elsif ($rs || $fs){ #no sort recursively traverse the filesystem?
        if ($fs) { File::Find::find( {wanted=> sub {_rFRename($_);}, follow=>1} , $startDir ); } #follow symbolic links? Can't sort with follow flag
        else { File::Find::finddepth( sub {_rFRename($_);}, $startDir ); } #follow folders within folders
-       #else { fRename($startDir); } #look at only names of files within $startDir folder
    }else{ fRename($startDir); }  #only look at the given base folder
      
    if(!$silent && $dryRun or $verbose){
