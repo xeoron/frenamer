@@ -16,7 +16,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.7 frenamer);
+my ($v,$progn)=qw(1.14.8 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -152,7 +152,7 @@ EOD
 }#end cmdlnParm()
 
 
-sub ask($) {                #ask the user a question. Parameters = $message
+sub ask($) { #ask the user a question. Parameters = $message
  return 1 if ($force); # Yes do it, don't ask, if either case is true
  my($msg) = @_; my $answer = "";
   
@@ -163,7 +163,7 @@ sub ask($) {                #ask the user a question. Parameters = $message
 }#end ask($)
 
 
-sub confirmChange($$@) { 	#ask if pending change is good or bad. Parameters = $currentFilename, $newFilename, @typeOf_FileSize
+sub confirmChange($$@) { #ask if pending change is good or bad. Parameters = $currentFilename, $newFilename, @typeOf_FileSize
   return 1 if ($dryRun); 	#if dry run flag is on, then display changes, but do not comit them to file
   my ($currentf, $newf, @sizeType)=@_;  
   
@@ -171,7 +171,7 @@ sub confirmChange($$@) { 	#ask if pending change is good or bad. Parameters = $c
 }#end confirmChage($)
 
 
-sub getPerms($) { 	#get file permisions in *nix format. Parameter = $file_to_lookup
+sub getPerms($) { #get file permisions in *nix format. Parameter = $file_to_lookup
 my ($file)=@_; 
  return "???" unless (-e $file && (-f $file || -d $file || -c $file) ); #does it exist? is a directory or file?
  my @perm=split "",sprintf "%04o", (lstat($file))[2] & 07777;
@@ -390,7 +390,7 @@ sub _processFRename(%) { # sort hash of files then process files Parameter = (%)
 }#end _processFRename(%)
 
 
-sub _lock ($) {  #Parameter = expects a filehandle reference to lock a file
+sub _lock ($) { #Parameter = expects a filehandle reference to lock a file
   my ($FH)=@_;
    until (flock($FH, LOCK_EX)){ sleep .10; }
 }#end _lock($)
@@ -579,7 +579,7 @@ my @group = $finder -> findDuplicates();
      }  
      
      my $input ="";
-     if ($force){      #don't ask which files to keep, just use the 1st one.
+     if ($force){ #don't ask which files to keep, just use the 1st one.
         $input=1; 
      }else{
         print "Action: Press [Return] to skip or choose one file to keep [1-$#$group]\n";
@@ -719,11 +719,14 @@ sub prepData() {  # prep Data settings before the program does the real work.
    }else { $startCount = 0; }
 
    if ($targetSizetype){
-       $targetSizetype = uc $targetSizetype;
-       $targetSizetype = "" if ($targetSizetype !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GPB)/i);
+       $targetSizetype = uc $targetSizetype;  
+       if ($targetSizetype !~m/(b|kb|mb|gb|tb|pb|eb|zb|yb|bb|gpb)/i){
+           warn "Error: -tfu only supports b, kb, mb, gb, tb, pb, eb, zb, yb, bb, gpb\n" if (!$silent);
+           exit 1;
+       }
    }
    if ($targetFilesize){
-       if ($targetFilesize !~m/(B|KB|MB|GB|TB|PB|EB|ZB|YB|BB|GPB)/i) { $targetFilesize = "";}
+       if ($targetFilesize !~m/(b|kb|mb|gb|tb|pb|eb|zb|yb|bb|gpb)/i) { $targetFilesize = "";}
        else { $targetFilesize = intoBytes($targetFilesize); } #only use this info comparing bytes so convert
    } 
    
