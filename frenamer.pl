@@ -1,11 +1,18 @@
 #!/usr/bin/perl -w
 =comment
  Authors: Jason Campisi, and includes duplicate file finding code by Antonio Bellezza
- Date: 9.29.2007 -> 2024
+ Date: 9.29.2007 -> 2025
  Repository: https://github.com/xeoron/frenamer
  License: GPL v2 or higher <http://www.gnu.org/licenses/gpl.html> unless noted.
           findDupelicateFiles() & supporting code is GPL v2 
- Tested on perl v5.X built for Linux and macOS
+ Tested on perl v5.X built for Linux and macOS while does work on Windows with ActivePerl
+  Purpose: A powerful bulk file renaming program that can find and replace, translate case, append or prepend a number, 
+            add a timestamp, filter by file extension, file size, and more. 
+            It can also delete .DS_Store files, find duplicate files, and skip files or directories.
+            It can be used in dry-run mode, confirm mode, and force mode. 
+            It can be used in silent mode, verbose mode, and recursive mode.
+            It can be used with regular expressions, and user-defined regular expressions.
+            It can be used to translate case
 =end comment
 =cut
 
@@ -16,7 +23,7 @@ no warnings 'File::Find';
 use Fcntl  ':flock';                 #import LOCK_* constants;
 use constant SLASH=>qw(/);           #default: forward SLASH for *nix based filesystem path
 my $DATE="2007->". (1900 + (localtime())[5]);
-my ($v,$progn)=qw(1.14.8 frenamer);
+my ($v,$progn)=qw(1.14.9 frenamer);
 my ($fcount, $rs, $verbose, $confirm, $matchString, $replaceMatchWith, $startDir, $transU, $transD, 
     $version, $help, $fs, $rx, $force, $noForce, $noSanitize, $silent, $extension, $transWL, $dryRun, 
     $sequentialAppend, $sequentialPrepend, $renameFile, $startCount, $skipDir, $timeStamp, 
@@ -319,7 +326,7 @@ sub _sequential($) { #Append or prepend the file-count value to a name or last m
 } #end _sequential($)
 
 
-sub formatSize($) { #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
+sub formatFileSize($) { #find the filesize format type of a file: b, kb, mb, etc. Parameter = $fileSize_in_bytes 
 # return's a list of (size, formatType), "size formatType"
 # source, but modified to meet needs: https://kba49.wordpress.com/2013/02/17/format-file-sizes-human-readable-in-perl/
  my ($size, $exp, $units) = (shift, 0, [qw(B KB MB GB TB PB EB ZB YB BB GPB)]);
@@ -332,7 +339,7 @@ sub formatSize($) { #find the filesize format type of a file: b, kb, mb, etc. Pa
   }
   
  return wantarray ? (sprintf("%.2f", $size), $units->[$exp]) : sprintf("%.2f %s", $size, $units->[$exp]);  
-} #end formatSize($)
+} #end formatFileSize($)
 
 
 sub mySort(@) { #case insensitive sort: sort a list of files Parameter = @files
@@ -458,7 +465,7 @@ sub _rFRename($) { 	#Parameter = $filename | Purpose recursive file renaming pro
           $size = (stat($fold))[7];                                            
           $size = 0 if (! defined $size);                                      #fixes rare bug when existing file data fails to return from stat
           return if ( $targetFilesize and $size < $targetFilesize );           #if filesize too small
-          @sizeType = formatSize($size . ""); undef $size;
+          @sizeType = formatFileSize($size . ""); undef $size;
           return if ( $targetSizetype and ($sizeType[1] ne $targetSizetype) ); #filter out files that don't match size format type
       }
 
@@ -570,7 +577,7 @@ my @group = $finder -> findDuplicates();
 
 # Result printout and elaboration!
   for my $group ( @group ) {
-     print "Duplicates: size " . formatSize($group->[0]{size}) . "\n";
+     print "Duplicates: size " . formatFileSize($group->[0]{size}) . "\n";
      for (1..$#$group) { print " [$_] " . getPerms($group->[$_]) . " " . $group->[$_] . "\n"; }
      
      if ($dryRun){ #skip asking which files to keep and don't delete duplicates 
